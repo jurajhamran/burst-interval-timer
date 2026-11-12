@@ -19,7 +19,7 @@ export function AppNav() {
   return (
     <nav
       aria-label="Main"
-      className="shrink-0 bg-surface pb-[env(safe-area-inset-bottom)] [@media(display-mode:standalone)]:pb-[calc(env(safe-area-inset-bottom)+1rem)]"
+      className="shrink-0 bg-surface pb-[env(safe-area-inset-bottom)] [@media(display-mode:standalone)]:pb-[calc(env(safe-area-inset-bottom)+2rem)]"
     >
       <div className="flex h-16 items-center justify-around">
         {items.map((item) => {
@@ -34,7 +34,9 @@ export function AppNav() {
             >
               <span
                 className={`rounded-full px-4 py-1 ${
-                  active ? "bg-accent text-on-accent" : "bg-transparent text-muted"
+                  active
+                    ? "bg-accent text-on-accent"
+                    : "bg-transparent text-muted"
                 }`}
               >
                 <Icon className="size-6" />
