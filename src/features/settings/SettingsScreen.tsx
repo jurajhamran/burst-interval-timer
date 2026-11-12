@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { ThemeSwitcher } from "@/features/theme/ThemeSwitcher";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { InstallButton } from "@/pwa/InstallButton";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Switch } from "@/components/ui/Switch";
 import { useSettingsStore } from "./store";
@@ -87,6 +88,10 @@ export function SettingsScreen() {
   return (
     <PageContainer>
       <PageHeader title="Settings" />
+
+      <div className="pb-2">
+        <InstallButton />
+      </div>
 
       <div className="space-y-6 pb-6">
         <section>
