@@ -19,7 +19,7 @@ export function AppNav() {
   return (
     <nav
       aria-label="Main"
-      className="shrink-0 bg-surface pb-[env(safe-area-inset-bottom)]"
+      className="shrink-0 bg-surface pb-[env(safe-area-inset-bottom)] [@media(display-mode:standalone)]:pb-[calc(env(safe-area-inset-bottom)+1rem)]"
     >
       <div className="flex h-16 items-center justify-around">
         {items.map((item) => {
