@@ -1,0 +1,65 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+  --surface: #f4f5f7;
+  --surface-2: #ffffff;
+  --surface-3: #e8eaee;
+  --line: #d6dae1;
+  --muted: #5b6472;
+  --fg: #0d1117;
+  --accent: #a8e000;
+  --on-accent: #0d1117;
+  --on-color: #ffffff;
+  --work: #b8280c;
+  --rest: #076a58;
+  --break: #1f57a7;
+  --prepare: #924b04;
+  --overlay: rgb(0 0 0 / 0.6);
+}
+.dark {
+  color-scheme: dark;
+  --surface: #0a0c10;
+  --surface-2: #131720;
+  --surface-3: #1c222c;
+  --line: #28303b;
+  --muted: #8b95a7;
+  --fg: #f3f5f9;
+  --accent: #d4ff3a;
+  --on-accent: #0a0c10;
+  --on-color: #0a0c10;
+  --work: #ff5a36;
+  --rest: #2ee6c8;
+  --break: #5aa9ff;
+  --prepare: #ffb020;
+  --overlay: rgb(0 0 0 / 0.6);
+}
+
+@layer base {
+  html,
+  body {
+    margin: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+  button {
+    cursor: pointer;
+  }
+}
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-muted: var(--muted);
+  --color-fg: var(--fg);
+  --color-work: var(--work);
+  --color-rest: var(--rest);
+  --color-accent: var(--accent);
+  --color-break: var(--break);
+  --color-prepare: var(--prepare);
+  --color-on-color: var(--on-color);
+  --color-on-accent: var(--on-accent);
+}

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en" class="bg-surface overscroll-none">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0a0c10" />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="description"
+      content="Free offline Tabata and interval timer. Build custom work and rest workouts, drag to reorder, no sign-up. Your data stays on your device."
+    />
+    <meta name="application-name" content="Burst" />
+    <meta name="apple-mobile-web-app-title" content="Burst" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <title>Burst: Tabata &amp; Interval Timer</title>
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Burst" />
+    <meta property="og:title" content="Burst: Tabata &amp; Interval Timer" />
+    <meta
+      property="og:description"
+      content="Free offline Tabata and interval timer. Build custom work and rest workouts, drag to reorder, no sign-up. Your data stays on your device."
+    />
+    <meta property="og:url" content="https://burst.jurajhamran.com/" />
+    <meta
+      property="og:image"
+      content="https://burst.jurajhamran.com/og-image.png"
+    />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Burst, a Tabata and interval timer: a volt-lime lightning bolt on a dark background"
+    />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Burst: Tabata &amp; Interval Timer" />
+    <meta
+      name="twitter:description"
+      content="Free offline Tabata and interval timer. Build custom work and rest workouts, drag to reorder, no sign-up. Your data stays on your device."
+    />
+    <meta
+      name="twitter:image"
+      content="https://burst.jurajhamran.com/og-image.png"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="Burst, a Tabata and interval timer: a volt-lime lightning bolt on a dark background"
+    />
+
+    <link rel="canonical" href="https://burst.jurajhamran.com/" />
+
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem("tabata-theme");
+          var t = raw ? JSON.parse(raw).state.theme : "system";
+          var dark =
+            t === "dark" ||
+            (t !== "light" &&
+              matchMedia("(prefers-color-scheme: dark)").matches);
+          if (dark) document.documentElement.classList.add("dark");
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body class="bg-surface overscroll-none">
+    <div id="root"></div>
+    <noscript>Burst needs JavaScript to run.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
