@@ -86,7 +86,7 @@ export const useTimerStore = create<TimerState>((set, get) => ({
     if (remainingMs <= 0) {
       // Advance phase(s) if multiple elapsed
       let currentIndex = index;
-      let currentPhases = phases;
+      const currentPhases = phases;
       let nextIndex = currentIndex + 1;
 
       while (nextIndex < currentPhases.length) {

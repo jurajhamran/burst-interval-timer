@@ -46,7 +46,7 @@ export function beep(freq = 880, ms = 120) {
 
     osc.start();
     osc.stop(ctx.currentTime + ms / 1000);
-  } catch (err) {
+  } catch {
     // ignore audio errors
   }
 }

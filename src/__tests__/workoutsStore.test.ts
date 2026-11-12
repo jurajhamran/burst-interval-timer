@@ -175,6 +175,7 @@ describe("useWorkoutsStore", () => {
 
   it("persisted store migration normalizes workouts", () => {
     // Access persist options if possible or test migration logic indirectly / via store setup
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const persistOptions = (useWorkoutsStore as any).persist;
     if (persistOptions && persistOptions.getOptions) {
       const opts = persistOptions.getOptions();

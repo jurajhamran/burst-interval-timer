@@ -12,7 +12,7 @@ export function useWakeLock() {
       if (document.visibilityState !== "visible") return;
       try {
         wakeLock = await navigator.wakeLock.request("screen");
-      } catch (err) {
+      } catch {
         // ignore
       }
     }
