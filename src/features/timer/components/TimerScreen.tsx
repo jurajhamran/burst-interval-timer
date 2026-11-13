@@ -107,7 +107,7 @@ export function TimerScreen({
   const Icon = PHASE_ICONS[currentPhase.type];
 
   return (
-    <div className={`fixed inset-0 z-30 flex flex-col transition-colors duration-300 ${bgClass}`}>
+    <div className={`fixed inset-0 z-30 flex flex-col ${bgClass}`}>
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-6 pb-8 pt-[calc(1.5rem+env(safe-area-inset-top))]">
       <header className="text-center text-fg">
         <p className="text-sm text-fg/60">{workout.name}</p>
