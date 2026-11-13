@@ -21,7 +21,7 @@ export function AppNav() {
       aria-label="Main"
       className="shrink-0 bg-surface pb-[env(safe-area-inset-bottom)] [@media(display-mode:standalone)]:pb-[calc(env(safe-area-inset-bottom)+2.5rem)] [@media(display-mode:standalone)]:pt-4"
     >
-      <div className="flex h-16 items-center justify-around">
+      <div className="mx-auto flex h-16 w-full max-w-md items-center justify-around px-5 md:max-w-2xl">
         {items.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.to);

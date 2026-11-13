@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Download } from "lucide-react";
-import { usePwaInstall } from "./usePwaInstall";
+import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { installStrings as S } from "./installStrings";
 import { IN_APP_BROWSER } from "./pwaInstall";
 

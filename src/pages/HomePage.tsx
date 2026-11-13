@@ -8,7 +8,7 @@ import { Plus, Dumbbell } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
-import { useDocumentTitle } from "@/lib/useDocumentTitle";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export function HomePage() {
   const navigate = useNavigate();

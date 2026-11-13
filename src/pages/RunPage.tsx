@@ -6,7 +6,7 @@ import { useWorkoutsStore } from "@/features/workouts/store";
 import { useHistoryStore } from "@/features/history/store";
 import { getTotalSeconds } from "@/features/timer/engine";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { useDocumentTitle } from "@/lib/useDocumentTitle";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export function RunPage() {
   const params = useParams({ strict: false }) as { id?: string };
