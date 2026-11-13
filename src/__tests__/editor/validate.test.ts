@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { validateDraft } from "@/features/editor/validate";
-import { makeWorkout } from "@/test/factories";
+import { makeWorkout } from "../factories";
 
 describe("validateDraft", () => {
   it("empty name", () => {

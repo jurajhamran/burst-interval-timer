@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { useTimerStore } from "@/features/timer/store";
-import { makeWorkout } from "@/test/factories";
+import { makeWorkout } from "../factories";
 
 describe("useTimerStore", () => {
   beforeEach(() => {

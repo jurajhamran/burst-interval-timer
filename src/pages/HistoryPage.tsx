@@ -7,7 +7,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
-import { useDocumentTitle } from "@/lib/useDocumentTitle";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 function formatTotal(seconds: number): string {
   if (seconds >= 3600) {

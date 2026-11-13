@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { APP_NAME, APP_TAGLINE } from "./app";
+import { APP_NAME, APP_TAGLINE } from "@/lib/app";
 
 export function useDocumentTitle(title?: string): void {
   useEffect(() => {

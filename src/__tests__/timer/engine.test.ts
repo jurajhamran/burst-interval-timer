@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildPhases, getTotalSeconds } from "@/features/timer/engine";
-import { makeWorkout } from "@/test/factories";
+import { makeWorkout } from "../factories";
 
 describe("buildPhases", () => {
   it("2 items x 2 rounds all options off -> work,rest,work,rest rounds 1,1,2,2", () => {

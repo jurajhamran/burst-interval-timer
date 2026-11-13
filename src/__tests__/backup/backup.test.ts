@@ -6,7 +6,7 @@ import {
   backupFileName,
   BACKUP_VERSION,
 } from "@/features/backup/backup";
-import { makeWorkout } from "@/test/factories";
+import { makeWorkout } from "../factories";
 import type { HistoryEntry } from "@/features/history/types";
 
 function entry(id: string, completedAt = 1000): HistoryEntry {

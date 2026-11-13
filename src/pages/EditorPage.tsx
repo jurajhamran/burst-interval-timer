@@ -2,7 +2,7 @@ import { useParams, useNavigate, Navigate } from "@tanstack/react-router";
 import { EditorScreen } from "@/features/editor/components/EditorScreen";
 import { useWorkoutsStore } from "@/features/workouts/store";
 import type { Workout } from "@/features/workouts/types";
-import { useDocumentTitle } from "@/lib/useDocumentTitle";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export function EditorPage() {
   const params = useParams({ strict: false }) as { id?: string };
