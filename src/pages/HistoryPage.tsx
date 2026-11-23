@@ -3,7 +3,16 @@ import { Flame, History as HistoryIcon, Trash2 } from "lucide-react";
 import { useHistoryStore } from "@/features/history/store";
 import { getStats, groupByDay } from "@/features/history/stats";
 import { formatDuration } from "@/lib/format";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
@@ -129,28 +138,62 @@ export function HistoryPage() {
         </Button>
       </div>
 
-      <ConfirmDialog
+      <AlertDialog
         open={deleteId !== null}
-        title="Delete this entry?"
-        confirmLabel="Delete"
-        onConfirm={() => {
-          if (deleteId) deleteEntry(deleteId);
-          setDeleteId(null);
+        onOpenChange={(open) => {
+          if (!open) setDeleteId(null);
         }}
-        onCancel={() => setDeleteId(null)}
-      />
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this entry?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteId(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                if (deleteId) deleteEntry(deleteId);
+                setDeleteId(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      <ConfirmDialog
+      <AlertDialog
         open={clearOpen}
-        title="Clear all history?"
-        description="This can't be undone."
-        confirmLabel="Clear"
-        onConfirm={() => {
-          clearHistory();
-          setClearOpen(false);
+        onOpenChange={(open) => {
+          if (!open) setClearOpen(false);
         }}
-        onCancel={() => setClearOpen(false)}
-      />
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear all history?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setClearOpen(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                clearHistory();
+                setClearOpen(false);
+              }}
+            >
+              Clear
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageContainer>
   );
 }
