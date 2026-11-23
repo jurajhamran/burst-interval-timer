@@ -10,8 +10,10 @@ import { useSettingsStore } from "../store";
 import { unlockAudio } from "@/lib/audio";
 import { cuePhaseStart } from "@/features/timer/cues";
 import { canVibrate, vibrate } from "@/lib/vibrate";
-import { Download, Upload } from "lucide-react";
+import { Download, Upload, AlertTriangle } from "lucide-react";
 import { exportBackup, readBackupFile } from "@/features/backup/io";
+import { formatLastBackup, isBackupStale } from "@/features/backup/lastBackup";
+import { toast } from "@/features/toast/store";
 import { planImport } from "@/features/backup/backup";
 import { useWorkoutsStore } from "@/features/workouts/store";
 import { useHistoryStore } from "@/features/history/store";
@@ -24,16 +26,18 @@ export function SettingsScreen() {
   const volume = useSettingsStore((s) => s.volume);
   const vibrationEnabled = useSettingsStore((s) => s.vibrationEnabled);
   const confettiEnabled = useSettingsStore((s) => s.confettiEnabled);
+  const lastBackupAt = useSettingsStore((s) => s.lastBackupAt);
   const setSoundEnabled = useSettingsStore((s) => s.setSoundEnabled);
   const setVolume = useSettingsStore((s) => s.setVolume);
   const setVibrationEnabled = useSettingsStore((s) => s.setVibrationEnabled);
   const setConfettiEnabled = useSettingsStore((s) => s.setConfettiEnabled);
+  const setLastBackupAt = useSettingsStore((s) => s.setLastBackupAt);
+
+  const backupStale = isBackupStale(lastBackupAt);
 
   const addWorkouts = useWorkoutsStore((s) => s.addWorkouts);
   const addEntries = useHistoryStore((s) => s.addEntries);
 
-  const [importError, setImportError] = useState<string | null>(null);
-  const [importStatus, setImportStatus] = useState<string | null>(null);
   const [pendingImport, setPendingImport] = useState<{
     workoutsToAdd: Workout[];
     entriesToAdd: HistoryEntry[];
@@ -42,22 +46,20 @@ export function SettingsScreen() {
   } | null>(null);
   const [importConfirmOpen, setImportConfirmOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const statusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const showStatus = (msg: string) => {
-    if (statusTimerRef.current) clearTimeout(statusTimerRef.current);
-    setImportStatus(msg);
-    statusTimerRef.current = setTimeout(() => setImportStatus(null), 4000);
-  };
 
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setImportError(null);
-    setImportStatus(null);
-    const result = await readBackupFile(file);
+    let result: Awaited<ReturnType<typeof readBackupFile>>;
+    try {
+      result = await readBackupFile(file);
+    } catch {
+      toast.error("Couldn't read the backup file");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
     if (!result.ok) {
-      setImportError(result.error);
+      toast.error("Invalid backup file");
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
@@ -70,7 +72,7 @@ export function SettingsScreen() {
       history: result.history,
     });
     if (plan.workoutsToAdd.length === 0 && plan.entriesToAdd.length === 0) {
-      showStatus("Nothing new to import.");
+      toast.info("Nothing new to import");
     } else {
       setPendingImport({ ...plan, skipped: result.skipped });
       setImportConfirmOpen(true);
@@ -82,8 +84,11 @@ export function SettingsScreen() {
     if (!pendingImport) return;
     addWorkouts(pendingImport.workoutsToAdd);
     addEntries(pendingImport.entriesToAdd);
-    showStatus(
-      `Imported ${pendingImport.workoutsToAdd.length} workouts and ${pendingImport.entriesToAdd.length} entries.`,
+    const count = pendingImport.workoutsToAdd.length;
+    toast.success(
+      count > 0
+        ? `Imported ${count} ${count === 1 ? "workout" : "workouts"}`
+        : "Import complete",
     );
     setPendingImport(null);
     setImportConfirmOpen(false);
@@ -213,12 +218,29 @@ export function SettingsScreen() {
           <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Data
           </h2>
+          {backupStale && (
+            <div className="mt-2 flex items-start gap-2 rounded-xl bg-work/10 p-3 text-sm text-work">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
+              <p>
+                Your workouts and history live only on this device. Export a
+                backup to keep them safe.
+              </p>
+            </div>
+          )}
           <div className="mt-2 divide-y divide-line rounded-2xl border border-line bg-surface-2">
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="min-w-0">
                 <p className="font-medium text-sm">Export backup</p>
-                <p className="text-xs text-muted-foreground">
-                  Workouts and history as a JSON file
+                <p
+                  className={`text-xs ${
+                    backupStale
+                      ? "text-work"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {lastBackupAt === null
+                    ? "Never backed up"
+                    : `Last backup: ${formatLastBackup(lastBackupAt)}`}
                 </p>
               </div>
               <Button
@@ -226,7 +248,17 @@ export function SettingsScreen() {
                 variant="secondary"
                 size="sm"
                 onClick={() => {
-                  void exportBackup();
+                  void (async () => {
+                    try {
+                      const exported = await exportBackup();
+                      if (exported) {
+                        setLastBackupAt(Date.now());
+                        toast.success("Backup exported");
+                      }
+                    } catch {
+                      toast.error("Couldn't export backup");
+                    }
+                  })();
                 }}
               >
                 <Download className="size-4" />
@@ -262,14 +294,6 @@ export function SettingsScreen() {
               />
             </div>
           </div>
-          {importError && (
-            <p role="alert" className="mt-2 text-sm text-work">
-              {importError}
-            </p>
-          )}
-          {importStatus && (
-            <p className="mt-2 text-sm text-muted-foreground">{importStatus}</p>
-          )}
         </section>
       </div>
 
