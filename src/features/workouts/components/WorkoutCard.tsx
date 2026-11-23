@@ -1,4 +1,5 @@
 import { Play, Eye, Clock, Repeat, Flame, Wind } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { formatDuration } from "@/lib/format";
 import { unlockAudio } from "@/lib/audio";
 import { getTotalSeconds } from "@/features/timer/engine";
@@ -107,17 +108,18 @@ export function WorkoutCard({
       <div className="flex items-center justify-between pt-3 border-t border-line/60">
         <div className="flex items-center gap-1">
           {onPreview && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={(e) => {
-              e.stopPropagation();
-              onPreview?.();
-            }}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-surface-3 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-fg hover:bg-surface-3/80 transition-transform active:scale-95"
+                e.stopPropagation();
+                onPreview?.();
+              }}
             >
               <Eye className="size-3.5" aria-hidden />
               Preview timeline
-            </button>
+            </Button>
           )}
         </div>
       </div>
