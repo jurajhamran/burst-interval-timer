@@ -5,6 +5,7 @@ import { InstallButton } from "@/pwa/InstallButton";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/Button";
 import { useSettingsStore } from "../store";
 import { unlockAudio } from "@/lib/audio";
 import { cuePhaseStart } from "@/features/timer/cues";
@@ -141,16 +142,17 @@ export function SettingsScreen() {
             </div>
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <span className="font-medium text-sm">Test sound</span>
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={() => {
                   unlockAudio();
                   cuePhaseStart();
                 }}
-                className="rounded-full bg-surface-3 px-4 py-2 text-sm"
               >
                 Test
-              </button>
+              </Button>
             </div>
           </div>
         </section>
@@ -179,14 +181,15 @@ export function SettingsScreen() {
             </div>
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <span className="font-medium text-sm">Test vibration</span>
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={() => vibrate([200, 100, 200, 100, 400])}
                 disabled={!canVibrate}
-                className="rounded-full bg-surface-3 px-4 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Test
-              </button>
+              </Button>
             </div>
           </div>
         </section>
@@ -202,16 +205,17 @@ export function SettingsScreen() {
                   Workouts and history as a JSON file
                 </p>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={() => {
                   void exportBackup();
                 }}
-                className="inline-flex items-center gap-1.5 rounded-full bg-surface-3 px-4 py-2 text-sm"
               >
                 <Download className="size-4" />
                 Export
-              </button>
+              </Button>
             </div>
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="min-w-0">
@@ -220,14 +224,15 @@ export function SettingsScreen() {
                   Merges with your current data
                 </p>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-1.5 rounded-full bg-surface-3 px-4 py-2 text-sm"
               >
                 <Upload className="size-4" />
                 Import
-              </button>
+              </Button>
               <input
                 ref={fileInputRef}
                 id="backup-file"
