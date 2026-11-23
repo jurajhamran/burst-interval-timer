@@ -44,16 +44,6 @@ export function WorkoutCard({
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2 mb-1.5">
-            <span className="inline-flex items-center gap-1 rounded-full bg-surface-3 px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
-              <Repeat className="size-3" aria-hidden />
-              {workout.rounds} {workout.rounds === 1 ? "round" : "rounds"}
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-surface-3 px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
-              <Clock className="size-3" aria-hidden />
-              {formatDuration(total)}
-            </span>
-          </div>
           <h2 className="text-xl font-bold tracking-tight text-fg truncate">
             {workout.name}
           </h2>
@@ -105,23 +95,31 @@ export function WorkoutCard({
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-3 border-t border-line/60">
-        <div className="flex items-center gap-1">
-          {onPreview && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onPreview?.();
-              }}
-            >
-              <Eye className="size-3.5" aria-hidden />
-              Preview timeline
-            </Button>
-          )}
+      <div className="flex items-center justify-between gap-3 pt-3 border-t border-line/60">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1 rounded-full bg-surface-3 px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+            <Repeat className="size-3" aria-hidden />
+            {workout.rounds} {workout.rounds === 1 ? "round" : "rounds"}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-surface-3 px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+            <Clock className="size-3" aria-hidden />
+            {formatDuration(total)}
+          </span>
         </div>
+        {onPreview && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label={`Preview ${workout.name}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onPreview?.();
+            }}
+          >
+            <Eye className="size-4" aria-hidden />
+          </Button>
+        )}
       </div>
     </div>
   );

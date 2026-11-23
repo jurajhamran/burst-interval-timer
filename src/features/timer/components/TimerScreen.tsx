@@ -34,6 +34,9 @@ export function TimerScreen({
   const remainingMs = useTimerStore((s) => s.remainingMs);
 
   const confettiEnabled = useSettingsStore((s) => s.confettiEnabled);
+  const countdownSoundEnabled = useSettingsStore(
+    (s) => s.countdownSoundEnabled,
+  );
   useFinishConfetti(finished && confettiEnabled);
 
   const finishMessage = useMemo(
@@ -58,6 +61,12 @@ export function TimerScreen({
   const isRoundRest = currentPhase?.type === "round-rest";
 
   const remainingSecs = Math.ceil(remainingMs / 1000);
+  const remainingAfterCurrentSecs = phases
+    .slice(index + 1)
+    .reduce((sum, phase) => sum + phase.duration, 0);
+  const sessionRemainingSecs = Math.ceil(
+    (remainingMs + remainingAfterCurrentSecs * 1000) / 1000,
+  );
   const totalDurationMs = (currentPhase?.duration ?? 1) * 1000;
   const progress = currentPhase ? Math.max(0, Math.min(1, remainingMs / totalDurationMs)) : 0;
 
@@ -108,9 +117,9 @@ export function TimerScreen({
       lastBeepSecRef.current !== remainingSecs
     ) {
       lastBeepSecRef.current = remainingSecs;
-      cueCountdown();
+      cueCountdown(countdownSoundEnabled);
     }
-  }, [running, finished, index, remainingSecs, currentPhase]);
+  }, [running, finished, index, remainingSecs, currentPhase, countdownSoundEnabled]);
 
   // Finished triple beep
   useEffect(() => {
@@ -176,12 +185,17 @@ export function TimerScreen({
           <p className="line-clamp-2 px-2 text-sm break-words text-balance [overflow-wrap:anywhere] text-fg/60">
             {workout.name}
           </p>
-          <p className="mt-1 text-lg font-semibold">
-            {isPrepare
-              ? "Get ready"
-              : isRoundRest
-              ? `Round ${currentPhase.round} complete`
-              : `Round ${currentPhase.round} / ${workout.rounds}`}
+          <p className="mt-1 flex flex-wrap items-center justify-center gap-x-2 text-lg font-semibold">
+            <span>
+              {isPrepare
+                ? "Get ready"
+                : isRoundRest
+                ? `Round ${currentPhase.round} complete`
+                : `Round ${currentPhase.round} / ${workout.rounds}`}
+            </span>
+            <span className="text-xs font-medium tabular-nums text-fg/60">
+              {formatDuration(sessionRemainingSecs)} left
+            </span>
           </p>
         </header>
 

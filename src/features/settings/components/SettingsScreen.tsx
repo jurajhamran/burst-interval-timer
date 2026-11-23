@@ -23,11 +23,17 @@ import type { HistoryEntry } from "@/features/history/types/types";
 
 export function SettingsScreen() {
   const soundEnabled = useSettingsStore((s) => s.soundEnabled);
+  const countdownSoundEnabled = useSettingsStore(
+    (s) => s.countdownSoundEnabled,
+  );
   const volume = useSettingsStore((s) => s.volume);
   const vibrationEnabled = useSettingsStore((s) => s.vibrationEnabled);
   const confettiEnabled = useSettingsStore((s) => s.confettiEnabled);
   const lastBackupAt = useSettingsStore((s) => s.lastBackupAt);
   const setSoundEnabled = useSettingsStore((s) => s.setSoundEnabled);
+  const setCountdownSoundEnabled = useSettingsStore(
+    (s) => s.setCountdownSoundEnabled,
+  );
   const setVolume = useSettingsStore((s) => s.setVolume);
   const setVibrationEnabled = useSettingsStore((s) => s.setVibrationEnabled);
   const setConfettiEnabled = useSettingsStore((s) => s.setConfettiEnabled);
@@ -139,6 +145,22 @@ export function SettingsScreen() {
                 checked={soundEnabled}
                 onCheckedChange={(checked: boolean) => setSoundEnabled(checked)}
                 aria-label="Sound"
+                className="h-7 w-12 data-checked:bg-brand data-unchecked:bg-surface-3"
+              />
+            </div>
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="min-w-0">
+                <p className="font-medium text-sm">Countdown beeps</p>
+                <p className="text-xs text-muted-foreground">
+                  Beep at 3, 2, 1 seconds
+                </p>
+              </div>
+              <Switch
+                checked={countdownSoundEnabled}
+                onCheckedChange={(checked: boolean) =>
+                  setCountdownSoundEnabled(checked)
+                }
+                aria-label="Countdown beeps"
                 className="h-7 w-12 data-checked:bg-brand data-unchecked:bg-surface-3"
               />
             </div>
