@@ -137,9 +137,6 @@ export function SettingsScreen() {
                     className="w-full"
                   />
                 </div>
-                <span className="text-sm text-muted-foreground w-10 text-right">
-                  {Math.round(volume * 100)}%
-                </span>
               </div>
             </div>
             <div className="flex items-center justify-between gap-3 px-4 py-3">
