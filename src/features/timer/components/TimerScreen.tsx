@@ -22,6 +22,7 @@ export function TimerScreen({
   const start = useTimerStore((s) => s.start);
   const toggle = useTimerStore((s) => s.toggle);
   const skip = useTimerStore((s) => s.skip);
+  const previous = useTimerStore((s) => s.previous);
   const running = useTimerStore((s) => s.running);
   const finished = useTimerStore((s) => s.finished);
   const phases = useTimerStore((s) => s.phases);
@@ -108,49 +109,54 @@ export function TimerScreen({
 
   return (
     <div className={`fixed inset-0 z-30 flex flex-col transition-colors duration-300 ${bgClass}`}>
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-6 pb-8 pt-[calc(1.5rem+env(safe-area-inset-top))]">
-      <header className="text-center text-fg">
-        <p className="px-2 text-sm text-fg/60 break-words text-balance">
-          {workout.name}
-        </p>
-        <p className="mt-1 text-lg font-semibold">
-          {isPrepare
-            ? "Get ready"
-            : isRoundRest
-            ? `Round ${currentPhase.round} complete`
-            : `Round ${currentPhase.round} / ${workout.rounds}`}
-        </p>
-      </header>
+      <div className="timer-layout mx-auto w-full max-w-md flex-1 px-6 pb-8 pt-[calc(1.5rem+env(safe-area-inset-top))]">
+        <header className="timer-header text-center text-fg">
+          <p className="line-clamp-2 px-2 text-sm break-words text-balance [overflow-wrap:anywhere] text-fg/60">
+            {workout.name}
+          </p>
+          <p className="mt-1 text-lg font-semibold">
+            {isPrepare
+              ? "Get ready"
+              : isRoundRest
+              ? `Round ${currentPhase.round} complete`
+              : `Round ${currentPhase.round} / ${workout.rounds}`}
+          </p>
+        </header>
 
-      <main className="flex min-h-0 flex-1 flex-col justify-center gap-8">
-        <ProgressRing progress={progress}>
-          <div className="text-center">
-            <Icon className="mx-auto mb-2 size-7" aria-hidden />
-            <p className="text-sm font-semibold uppercase tracking-[0.3em]">
-              {currentPhase.label}
-            </p>
-            <p className="mt-2 text-7xl font-bold tabular-nums text-fg">
-              {formatDuration(remainingSecs)}
-            </p>
-          </div>
-        </ProgressRing>
+        <div className="timer-stage">
+          <ProgressRing progress={progress} className="timer-ring">
+            <div className="timer-ring-content text-center">
+              <Icon className="mx-auto mb-2 size-7" aria-hidden />
+              <p
+                className="timer-phase-label text-sm font-semibold uppercase leading-tight tracking-[0.2em] text-balance"
+                title={currentPhase.label}
+              >
+                {currentPhase.label}
+              </p>
+              <p className="timer-countdown mt-2 text-7xl font-bold tabular-nums text-fg">
+                {formatDuration(remainingSecs)}
+              </p>
+            </div>
+          </ProgressRing>
 
-        <p className="text-center text-sm text-fg/60">
-          Next:{" "}
-          <span className="font-medium text-fg">
-            {nextPhase ? nextPhase.label : "Finish"}
-          </span>
-        </p>
-      </main>
+          <p className="timer-next text-center text-sm text-fg/60">
+            Next:{" "}
+            <span className="font-medium text-fg">
+              {nextPhase ? nextPhase.label : "Finish"}
+            </span>
+          </p>
+        </div>
 
-      <div className="text-fg pb-[env(safe-area-inset-bottom)]">
-        <Controls
-          running={running}
-          onToggle={toggle}
-          onSkip={skip}
-          onStop={onExit}
-        />
-      </div>
+        <div className="timer-controls-wrap text-fg pb-[env(safe-area-inset-bottom)]">
+          <Controls
+            running={running}
+            canPrevious={index > 0}
+            onToggle={toggle}
+            onPrevious={previous}
+            onSkip={skip}
+            onStop={onExit}
+          />
+        </div>
       </div>
     </div>
   );

@@ -66,4 +66,83 @@ describe("useTimerStore", () => {
     expect(s.finished).toBe(true);
     expect(s.running).toBe(false);
   });
+
+  it("previous() at the first phase is a no-op", () => {
+    useTimerStore.getState().start(makeWorkout());
+    useTimerStore.getState().previous();
+    const s = useTimerStore.getState();
+    expect(s.index).toBe(0);
+    expect(s.finished).toBe(false);
+    expect(s.remainingMs).toBe(20000);
+  });
+
+  it("previous() returns to the prior phase at its full duration", () => {
+    useTimerStore.getState().start(makeWorkout());
+    useTimerStore.getState().skip();
+    vi.advanceTimersByTime(4000);
+    useTimerStore.getState().tick();
+    useTimerStore.getState().previous();
+
+    const s = useTimerStore.getState();
+    expect(s.index).toBe(0);
+    expect(s.remainingMs).toBe(20000);
+    expect(s.endsAt).toBe(24000);
+    expect(s.running).toBe(true);
+  });
+
+  it("previous() crosses round boundaries and keeps phase order", () => {
+    useTimerStore.getState().start(makeWorkout());
+    useTimerStore.getState().skip();
+    useTimerStore.getState().skip();
+    expect(useTimerStore.getState().index).toBe(2);
+
+    useTimerStore.getState().previous();
+    let s = useTimerStore.getState();
+    expect(s.index).toBe(1);
+    expect(useTimerStore.getState().phases[1].type).toBe("rest");
+    expect(s.remainingMs).toBe(10000);
+
+    useTimerStore.getState().previous();
+    s = useTimerStore.getState();
+    expect(s.index).toBe(0);
+    expect(s.remainingMs).toBe(20000);
+  });
+
+  it("previous() from prepare skips back into preparation phase", () => {
+    useTimerStore
+      .getState()
+      .start(makeWorkout({ prepare: { enabled: true, duration: 5 } }));
+    useTimerStore.getState().skip();
+    expect(useTimerStore.getState().index).toBe(1);
+
+    useTimerStore.getState().previous();
+    const s = useTimerStore.getState();
+    expect(s.index).toBe(0);
+    expect(s.phases[0].type).toBe("prepare");
+    expect(s.remainingMs).toBe(5000);
+  });
+
+  it("previous() preserves the paused state", () => {
+    useTimerStore.getState().start(makeWorkout());
+    useTimerStore.getState().skip();
+    useTimerStore.getState().toggle();
+    useTimerStore.getState().previous();
+
+    const s = useTimerStore.getState();
+    expect(s.index).toBe(0);
+    expect(s.running).toBe(false);
+    expect(s.remainingMs).toBe(20000);
+  });
+
+  it("previous() after finishing does not restart the workout", () => {
+    useTimerStore.getState().start(makeWorkout());
+    vi.advanceTimersByTime(100000);
+    useTimerStore.getState().tick();
+    expect(useTimerStore.getState().finished).toBe(true);
+
+    useTimerStore.getState().previous();
+    const s = useTimerStore.getState();
+    expect(s.finished).toBe(true);
+    expect(s.running).toBe(false);
+  });
 });

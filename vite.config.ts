@@ -29,7 +29,7 @@ export default defineConfig({
         start_url: "/",
         scope: "/",
         display: "standalone",
-        orientation: "portrait-primary",
+        orientation: "any",
         theme_color: "#0a0c10",
         background_color: "#0a0c10",
         categories: ["health", "fitness", "sports"],

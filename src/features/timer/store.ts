@@ -17,6 +17,7 @@ interface TimerState {
   start: (workout: Workout) => void;
   toggle: () => void;
   skip: () => void;
+  previous: () => void;
   tick: () => void;
 }
 
@@ -74,6 +75,21 @@ export const useTimerStore = create<TimerState>((set, get) => ({
         lastBeepSecond: null,
       });
     }
+  },
+
+  previous: () => {
+    const { phases, index, finished } = get();
+    if (finished || index <= 0) return;
+
+    const prevPhase = phases[index - 1];
+    const durationMs = prevPhase.duration * 1000;
+    const now = Date.now();
+    set({
+      index: index - 1,
+      endsAt: now + durationMs,
+      remainingMs: durationMs,
+      lastBeepSecond: null,
+    });
   },
 
   tick: () => {
