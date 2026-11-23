@@ -2,7 +2,7 @@ import { useWorkoutsStore } from "@/features/workouts/store";
 import { useHistoryStore } from "@/features/history/store";
 import { buildBackup, parseBackup, backupFileName } from "./backup";
 
-export async function exportBackup(): Promise<void> {
+export async function exportBackup(): Promise<boolean> {
   const workouts = useWorkoutsStore.getState().workouts;
   const history = useHistoryStore.getState().entries;
   const data = buildBackup(workouts, history);
@@ -18,7 +18,7 @@ export async function exportBackup(): Promise<void> {
       await navigator.share({ files: [file] });
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
-        return;
+        return false;
       }
       throw err;
     }
@@ -32,6 +32,8 @@ export async function exportBackup(): Promise<void> {
     a.remove();
     URL.revokeObjectURL(url);
   }
+
+  return true;
 }
 
 export async function readBackupFile(

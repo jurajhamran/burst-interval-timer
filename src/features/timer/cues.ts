@@ -1,8 +1,8 @@
 import { beep } from "@/lib/audio";
 import { vibrate } from "@/lib/vibrate";
 
-export function cueCountdown(): void {
-  beep(880, 120);
+export function cueCountdown(playSound = true): void {
+  if (playSound) beep(880, 120);
   vibrate(40);
 }
 

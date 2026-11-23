@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Trophy } from "lucide-react";
 import { formatDuration } from "@/lib/format";
 import type { Workout } from "@/features/workouts/types/types";
@@ -34,6 +34,9 @@ export function TimerScreen({
   const remainingMs = useTimerStore((s) => s.remainingMs);
 
   const confettiEnabled = useSettingsStore((s) => s.confettiEnabled);
+  const countdownSoundEnabled = useSettingsStore(
+    (s) => s.countdownSoundEnabled,
+  );
   useFinishConfetti(finished && confettiEnabled);
 
   const finishMessage = useMemo(
@@ -43,6 +46,8 @@ export function TimerScreen({
 
   const prevIndexRef = useRef<number>(-1);
   const lastBeepSecRef = useRef<number | null>(null);
+  const finishHeadingRef = useRef<HTMLHeadingElement>(null);
+  const [announcement, setAnnouncement] = useState("");
 
   useEffect(() => {
     start(workout);
@@ -50,13 +55,49 @@ export function TimerScreen({
 
   const currentPhase = phases[index];
   const nextPhase = phases[index + 1];
+  const rounds = workout.rounds;
   const isPrepare = currentPhase?.type === "prepare";
   const isWork = currentPhase?.type === "work";
   const isRoundRest = currentPhase?.type === "round-rest";
 
   const remainingSecs = Math.ceil(remainingMs / 1000);
+  const remainingAfterCurrentSecs = phases
+    .slice(index + 1)
+    .reduce((sum, phase) => sum + phase.duration, 0);
+  const sessionRemainingSecs = Math.ceil(
+    (remainingMs + remainingAfterCurrentSecs * 1000) / 1000,
+  );
   const totalDurationMs = (currentPhase?.duration ?? 1) * 1000;
   const progress = currentPhase ? Math.max(0, Math.min(1, remainingMs / totalDurationMs)) : 0;
+
+  // Screen reader announcement when a new phase starts
+  useEffect(() => {
+    if (finished || !currentPhase) return;
+
+    const roundLabel =
+      currentPhase.type === "prepare"
+        ? "Get ready"
+        : currentPhase.type === "round-rest"
+          ? `Round ${currentPhase.round} complete`
+          : `Round ${currentPhase.round} of ${rounds}`;
+
+    setAnnouncement(
+      `${roundLabel}. ${currentPhase.label}, ${currentPhase.duration} seconds.`,
+    );
+  }, [index, currentPhase, finished, rounds]);
+
+  // Screen reader countdown at 3, 2, 1 seconds remaining
+  useEffect(() => {
+    if (!running || finished || !currentPhase) return;
+    if (remainingSecs > 0 && remainingSecs <= 3) {
+      setAnnouncement(`${remainingSecs}`);
+    }
+  }, [remainingSecs, running, finished, currentPhase]);
+
+  // Move focus to the finish heading so it is announced
+  useEffect(() => {
+    if (finished) finishHeadingRef.current?.focus();
+  }, [finished]);
 
   // Handle audio beeps
   useEffect(() => {
@@ -76,9 +117,9 @@ export function TimerScreen({
       lastBeepSecRef.current !== remainingSecs
     ) {
       lastBeepSecRef.current = remainingSecs;
-      cueCountdown();
+      cueCountdown(countdownSoundEnabled);
     }
-  }, [running, finished, index, remainingSecs, currentPhase]);
+  }, [running, finished, index, remainingSecs, currentPhase, countdownSoundEnabled]);
 
   // Finished triple beep
   useEffect(() => {
@@ -92,8 +133,15 @@ export function TimerScreen({
       <div className="fixed inset-0 z-30 flex flex-col items-center justify-between overflow-y-auto px-6 pb-8 pt-[calc(3rem+env(safe-area-inset-top))] bg-surface text-fg text-center">
         <div className="my-auto space-y-4">
           <Trophy className="mx-auto size-12 text-brand" aria-hidden />
-          <h1 className="text-4xl font-bold">{finishMessage.title}</h1>
-          <p className="text-muted-foreground">
+          <h1
+            ref={finishHeadingRef}
+            tabIndex={-1}
+            aria-describedby="finish-subtitle"
+            className="text-4xl font-bold outline-none"
+          >
+            {finishMessage.title}
+          </h1>
+          <p id="finish-subtitle" className="text-muted-foreground">
             {finishMessage.subtitle(workout.name)}
           </p>
         </div>
@@ -124,17 +172,30 @@ export function TimerScreen({
 
   return (
     <div className={`fixed inset-0 z-30 flex flex-col transition-colors duration-300 ${bgClass}`}>
+      <div
+        className="sr-only"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {announcement}
+      </div>
       <div className="timer-layout mx-auto w-full max-w-md flex-1 px-6 pb-8 pt-[calc(1.5rem+env(safe-area-inset-top))]">
         <header className="timer-header text-center text-fg">
           <p className="line-clamp-2 px-2 text-sm break-words text-balance [overflow-wrap:anywhere] text-fg/60">
             {workout.name}
           </p>
-          <p className="mt-1 text-lg font-semibold">
-            {isPrepare
-              ? "Get ready"
-              : isRoundRest
-              ? `Round ${currentPhase.round} complete`
-              : `Round ${currentPhase.round} / ${workout.rounds}`}
+          <p className="mt-1 flex flex-wrap items-center justify-center gap-x-2 text-lg font-semibold">
+            <span>
+              {isPrepare
+                ? "Get ready"
+                : isRoundRest
+                ? `Round ${currentPhase.round} complete`
+                : `Round ${currentPhase.round} / ${workout.rounds}`}
+            </span>
+            <span className="text-xs font-medium tabular-nums text-fg/60">
+              {formatDuration(sessionRemainingSecs)} left
+            </span>
           </p>
         </header>
 
