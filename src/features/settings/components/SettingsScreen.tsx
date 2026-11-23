@@ -23,9 +23,11 @@ export function SettingsScreen() {
   const soundEnabled = useSettingsStore((s) => s.soundEnabled);
   const volume = useSettingsStore((s) => s.volume);
   const vibrationEnabled = useSettingsStore((s) => s.vibrationEnabled);
+  const confettiEnabled = useSettingsStore((s) => s.confettiEnabled);
   const setSoundEnabled = useSettingsStore((s) => s.setSoundEnabled);
   const setVolume = useSettingsStore((s) => s.setVolume);
   const setVibrationEnabled = useSettingsStore((s) => s.setVibrationEnabled);
+  const setConfettiEnabled = useSettingsStore((s) => s.setConfettiEnabled);
 
   const addWorkouts = useWorkoutsStore((s) => s.addWorkouts);
   const addEntries = useHistoryStore((s) => s.addEntries);
@@ -103,6 +105,20 @@ export function SettingsScreen() {
           <div className="mt-2 divide-y divide-line rounded-2xl border border-line bg-surface-2">
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <ThemeSwitcher showLabels />
+            </div>
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="min-w-0">
+                <p className="font-medium text-sm">Confetti</p>
+                <p className="text-xs text-muted-foreground">
+                  Celebrate when you finish a workout
+                </p>
+              </div>
+              <Switch
+                checked={confettiEnabled}
+                onCheckedChange={(checked: boolean) => setConfettiEnabled(checked)}
+                aria-label="Confetti"
+                className="h-7 w-12 data-checked:bg-brand data-unchecked:bg-surface-3"
+              />
             </div>
           </div>
         </section>
