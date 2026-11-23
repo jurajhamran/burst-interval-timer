@@ -110,7 +110,7 @@ export function WorkoutCard({
           {onPreview && (
             <Button
               type="button"
-              variant="secondary"
+              variant="ghost"
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
