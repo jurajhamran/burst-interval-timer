@@ -54,6 +54,122 @@
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Timer layout
+   Portrait keeps the original single-column flow. Short landscape viewports
+   (phones, iOS standalone) switch to ring-left / controls-right.
+--------------------------------------------------------------------------- */
+.timer-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.timer-stage {
+  display: flex;
+  flex: 1 1 0%;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2rem;
+  min-height: 0;
+}
+
+.timer-ring {
+  max-width: min(20rem, 100%);
+}
+
+.timer-ring-content {
+  width: 70%;
+  min-width: 0;
+}
+
+.timer-phase-label {
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+@media (orientation: landscape) and (max-height: 620px) {
+  .timer-layout {
+    display: grid;
+    max-width: 56rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "ring header"
+      "ring next"
+      "ring controls";
+    align-items: center;
+    align-content: center;
+    column-gap: 2rem;
+    row-gap: 0.75rem;
+    padding:
+      max(0.5rem, env(safe-area-inset-top))
+      max(1rem, env(safe-area-inset-right))
+      max(0.5rem, env(safe-area-inset-bottom))
+      max(1rem, env(safe-area-inset-left));
+  }
+
+  /* Promote ring + next out of the stage so grid areas apply. */
+  .timer-stage {
+    display: contents;
+  }
+
+  .timer-header {
+    grid-area: header;
+    align-self: center;
+  }
+
+  .timer-ring {
+    grid-area: ring;
+    width: 100%;
+    max-width: min(20rem, 64vh);
+    max-width: min(20rem, 64dvh);
+    align-self: center;
+    justify-self: center;
+  }
+
+  .timer-next {
+    grid-area: next;
+    align-self: center;
+  }
+
+  .timer-controls-wrap {
+    grid-area: controls;
+    align-self: center;
+  }
+
+  .timer-ring-content {
+    width: 74%;
+  }
+
+  .timer-phase-label {
+    letter-spacing: 0.12em;
+  }
+
+  .timer-countdown {
+    font-size: clamp(1.75rem, 12vh, 4.5rem);
+    font-size: clamp(1.75rem, 12dvh, 4.5rem);
+    line-height: 1;
+  }
+
+  .timer-controls {
+    gap: 0.75rem;
+  }
+
+  .timer-controls .timer-control-main {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .timer-controls .timer-control-side {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}
+
 @theme inline {
   /* Burst design tokens */
   --color-surface: var(--surface);

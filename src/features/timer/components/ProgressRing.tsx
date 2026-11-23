@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 const R = 120;
 const C = 2 * Math.PI * R;
@@ -6,12 +7,14 @@ const C = 2 * Math.PI * R;
 export function ProgressRing({
   progress,
   children,
+  className,
 }: {
   progress: number;
   children: ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-xs">
+    <div className={cn("relative mx-auto aspect-square w-full max-w-xs", className)}>
       <svg viewBox="0 0 280 280" className="size-full -rotate-90">
         <circle
           cx="140"

@@ -129,7 +129,7 @@ export function HistoryPage() {
         </div>
 
         <Button
-          variant="outline-danger"
+          variant="destructive"
           size="md"
           className="w-full"
           onClick={() => setClearOpen(true)}
