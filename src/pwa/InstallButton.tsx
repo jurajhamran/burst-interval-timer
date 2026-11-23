@@ -22,7 +22,7 @@ export function InstallButton() {
           aria-expanded={expanded}
           aria-controls={PANEL_ID}
           onClick={() => setExpanded((v) => !v)}
-          className="min-h-10 w-full rounded-full inline-flex items-center justify-center gap-2 bg-accent text-on-accent px-4 py-2 text-sm font-medium cursor-pointer"
+          className="min-h-10 w-full rounded-full inline-flex items-center justify-center gap-2 bg-brand text-on-accent px-4 py-2 text-sm font-medium cursor-pointer"
         >
           <Download className="size-4 shrink-0" />
           <span>{expanded ? S.hideInstructions : S.installApp}</span>
@@ -52,7 +52,7 @@ export function InstallButton() {
             {inApp ? (
               <div className="space-y-3">
                 <p className="font-medium">{S.inAppTitle}</p>
-                <p className="text-muted">{S.inAppBody}</p>
+                <p className="text-muted-foreground">{S.inAppBody}</p>
                 <button
                   type="button"
                   onClick={async () => {
@@ -86,10 +86,10 @@ export function InstallButton() {
                   <div>
                     <span className="font-medium">1. </span>
                     {S.steps.share}
-                    <div className="text-xs text-muted mt-1">
+                    <div className="text-xs text-muted-foreground mt-1">
                       {S.steps.shareDetailIphone}
                     </div>
-                    <div className="text-xs text-muted">
+                    <div className="text-xs text-muted-foreground">
                       {S.steps.shareDetailIpad}
                     </div>
                   </div>
@@ -118,7 +118,7 @@ export function InstallButton() {
               </li>
             </ol>
 
-            <p className="mt-3 text-xs text-muted">{S.footer}</p>
+            <p className="mt-3 text-xs text-muted-foreground">{S.footer}</p>
           </div>
         </div>
       </div>
@@ -131,7 +131,7 @@ export function InstallButton() {
     <button
       type="button"
       onClick={() => void promptInstall()}
-      className="min-h-10 w-full rounded-full inline-flex items-center justify-center gap-2 bg-accent text-on-accent px-4 py-2 text-sm font-medium cursor-pointer"
+      className="min-h-10 w-full rounded-full inline-flex items-center justify-center gap-2 bg-brand text-on-accent px-4 py-2 text-sm font-medium cursor-pointer"
     >
       <Download className="size-4 shrink-0" />
       {S.androidButton}
@@ -141,7 +141,7 @@ export function InstallButton() {
 
 function StepIconShare() {
   return (
-    <svg className="size-5 shrink-0 text-muted mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg className="size-5 shrink-0 text-muted-foreground mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
       <polyline points="16 6 12 2 8 6" />
       <line x1="12" y1="2" x2="12" y2="15" />
@@ -150,7 +150,7 @@ function StepIconShare() {
 }
 function StepIconAdd() {
   return (
-    <svg className="size-5 shrink-0 text-muted mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg className="size-5 shrink-0 text-muted-foreground mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="3" y="3" width="18" height="18" rx="2" />
       <path d="M12 8v8M8 12h8" />
     </svg>
@@ -158,14 +158,14 @@ function StepIconAdd() {
 }
 function StepIconConfirm() {
   return (
-    <svg className="size-5 shrink-0 text-muted mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg className="size-5 shrink-0 text-muted-foreground mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M20 6 9 17l-5-5" />
     </svg>
   );
 }
 function StepIconOpen() {
   return (
-    <svg className="size-5 shrink-0 text-muted mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg className="size-5 shrink-0 text-muted-foreground mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M12 2v20M2 12h20" />
     </svg>
   );

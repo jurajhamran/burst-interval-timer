@@ -5,7 +5,16 @@ import { useTimerStore } from "@/features/timer/store";
 import { useWorkoutsStore } from "@/features/workouts/store";
 import { useHistoryStore } from "@/features/history/store";
 import { getTotalSeconds } from "@/features/timer/engine";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export function RunPage() {
@@ -63,21 +72,32 @@ export function RunPage() {
         workout={workout}
         onExit={() => navigate({ to: "/", replace: true })}
       />
-      <ConfirmDialog
+      <AlertDialog
         open={confirmOpen || blocker.status === "blocked"}
-        title="Stop workout?"
-        description="Your progress in this session will be lost."
-        confirmLabel="Stop"
-        cancelLabel="Keep going"
-        onConfirm={() => {
-          setConfirmOpen(false);
-          blocker.proceed?.();
+        onOpenChange={(open) => {
+          if (!open) {
+            setConfirmOpen(false);
+            blocker.reset?.();
+          }
         }}
-        onCancel={() => {
-          setConfirmOpen(false);
-          blocker.reset?.();
-        }}
-      />
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Stop workout?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your progress in this session will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { setConfirmOpen(false); blocker.reset?.(); }}>
+              Keep going
+            </AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={() => { setConfirmOpen(false); blocker.proceed?.(); }}>
+              Stop
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

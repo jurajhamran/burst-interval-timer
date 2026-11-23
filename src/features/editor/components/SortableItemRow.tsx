@@ -1,7 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Trash2 } from "lucide-react";
-import type { SessionItem, ItemType } from "@/features/workouts/types";
+import type { SessionItem, ItemType } from "@/features/workouts/types/types";
 import { DurationInput } from "@/components/ui/DurationInput";
 import { PHASE_ICONS } from "@/features/timer/phaseIcons";
 
@@ -46,7 +46,7 @@ export function SortableItemRow({
           {...attributes}
           {...listeners}
           aria-label="Drag to reorder"
-          className="touch-none cursor-grab text-muted active:cursor-grabbing p-1"
+          className="touch-none cursor-grab text-muted-foreground active:cursor-grabbing p-1"
         >
           <GripVertical className="size-5" />
         </button>
@@ -65,7 +65,7 @@ export function SortableItemRow({
           type="button"
           onClick={onDelete}
           aria-label="Delete item"
-          className="text-muted hover:text-red-500 p-1"
+          className="text-muted-foreground hover:text-red-500 p-1"
         >
           <Trash2 className="size-5" />
         </button>
@@ -77,7 +77,7 @@ export function SortableItemRow({
             const active = item.type === t;
             const activeClass =
               t === "work" ? "bg-work text-on-color" : "bg-rest text-on-color";
-            const inactiveClass = "text-muted hover:text-fg";
+            const inactiveClass = "text-muted-foreground hover:text-fg";
             const Icon = t === "work" ? WorkIcon : RestIcon;
             return (
               <button

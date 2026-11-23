@@ -1,4 +1,4 @@
-import type { Workout } from "@/features/workouts/types";
+import type { Workout } from "@/features/workouts/types/types";
 
 export function validateDraft(draft: Workout): { name?: string; items?: string } {
   const errors: { name?: string; items?: string } = {};

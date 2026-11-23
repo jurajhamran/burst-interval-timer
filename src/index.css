@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
@@ -17,6 +19,7 @@
   --break: #1f57a7;
   --prepare: #924b04;
   --overlay: rgb(0 0 0 / 0.6);
+  --radius: 0.625rem;
 }
 .dark {
   color-scheme: dark;
@@ -43,23 +46,67 @@
     overflow: hidden;
     overscroll-behavior: none;
   }
-  button {
+  button,
+  [role="button"],
+  a,
+  summary {
     cursor: pointer;
   }
 }
 
 @theme inline {
+  /* Burst design tokens */
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-surface-3: var(--surface-3);
   --color-line: var(--line);
-  --color-muted: var(--muted);
   --color-fg: var(--fg);
+
+  --color-brand: var(--accent);
+  --color-brand-foreground: var(--on-accent);
+
   --color-work: var(--work);
   --color-rest: var(--rest);
-  --color-accent: var(--accent);
   --color-break: var(--break);
   --color-prepare: var(--prepare);
   --color-on-color: var(--on-color);
   --color-on-accent: var(--on-accent);
+
+  /* shadcn semantic tokens */
+  --color-background: var(--surface);
+  --color-foreground: var(--fg);
+
+  --color-card: var(--surface-2);
+  --color-card-foreground: var(--fg);
+
+  --color-popover: var(--surface-2);
+  --color-popover-foreground: var(--fg);
+
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--on-accent);
+
+  --color-secondary: var(--surface-3);
+  --color-secondary-foreground: var(--fg);
+
+  --color-muted: var(--surface-3);
+  --color-muted-foreground: var(--muted);
+
+  --color-accent: var(--surface-3);
+  --color-accent-foreground: var(--fg);
+
+  --color-destructive: var(--work);
+  --color-destructive-foreground: var(--on-color);
+
+  --color-border: var(--line);
+  --color-input: var(--line);
+  --color-ring: var(--accent);
+
+  /* Border radii */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }

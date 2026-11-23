@@ -1,10 +1,11 @@
 import { useState, useRef } from "react";
-import { ThemeSwitcher } from "@/features/theme/ThemeSwitcher";
+import { ThemeSwitcher } from "@/features/theme/components/ThemeSwitcher";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { InstallButton } from "@/pwa/InstallButton";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { Switch } from "@/components/ui/Switch";
-import { useSettingsStore } from "./store";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import { useSettingsStore } from "../store";
 import { unlockAudio } from "@/lib/audio";
 import { cuePhaseStart } from "@/features/timer/cues";
 import { canVibrate, vibrate } from "@/lib/vibrate";
@@ -14,8 +15,8 @@ import { planImport } from "@/features/backup/backup";
 import { useWorkoutsStore } from "@/features/workouts/store";
 import { useHistoryStore } from "@/features/history/store";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import type { Workout } from "@/features/workouts/types";
-import type { HistoryEntry } from "@/features/history/types";
+import type { Workout } from "@/features/workouts/types/types";
+import type { HistoryEntry } from "@/features/history/types/types";
 
 export function SettingsScreen() {
   const soundEnabled = useSettingsStore((s) => s.soundEnabled);
@@ -95,7 +96,7 @@ export function SettingsScreen() {
 
       <div className="space-y-6 pb-6">
         <section>
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Appearance
           </h2>
           <div className="mt-2 divide-y divide-line rounded-2xl border border-line bg-surface-2">
@@ -106,7 +107,7 @@ export function SettingsScreen() {
         </section>
 
         <section>
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Sound
           </h2>
           <div className="mt-2 divide-y divide-line rounded-2xl border border-line bg-surface-2">
@@ -114,27 +115,29 @@ export function SettingsScreen() {
               <span className="font-medium text-sm">Sound</span>
               <Switch
                 checked={soundEnabled}
-                onChange={() => setSoundEnabled(!soundEnabled)}
-                label="Sound"
+                onCheckedChange={(checked: boolean) => setSoundEnabled(checked)}
+                aria-label="Sound"
+                className="h-7 w-12 data-checked:bg-brand data-unchecked:bg-surface-3"
               />
             </div>
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <span className="font-medium text-sm">Volume</span>
               <div className="flex items-center gap-3">
-                <input
-                  id="volume-range"
-                  name="volume"
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  value={volume}
-                  onChange={(e) => setVolume(Number(e.target.value))}
-                  disabled={!soundEnabled}
-                  aria-label="Volume"
-                  className="accent-accent w-40 cursor-pointer"
-                />
-                <span className="text-sm text-muted w-10 text-right">
+                <div className="w-64">
+                  <Slider
+                    value={[volume]}
+                    onValueChange={(value) =>
+                      setVolume(Array.isArray(value) ? value[0] : value)
+                    }
+                    min={0}
+                    max={1}
+                    step={0.1}
+                    disabled={!soundEnabled}
+                    aria-label="Volume"
+                    className="w-full"
+                  />
+                </div>
+                <span className="text-sm text-muted-foreground w-10 text-right">
                   {Math.round(volume * 100)}%
                 </span>
               </div>
@@ -156,7 +159,7 @@ export function SettingsScreen() {
         </section>
 
         <section>
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Vibration
           </h2>
           <div className="mt-2 divide-y divide-line rounded-2xl border border-line bg-surface-2">
@@ -164,16 +167,17 @@ export function SettingsScreen() {
               <div className="min-w-0">
                 <p className="font-medium text-sm">Vibration</p>
                 {!canVibrate && (
-                  <p className="text-xs text-muted">
+                  <p className="text-xs text-muted-foreground">
                     Not supported on this device
                   </p>
                 )}
               </div>
               <Switch
                 checked={vibrationEnabled}
-                onChange={() => setVibrationEnabled(!vibrationEnabled)}
-                label="Vibration"
+                onCheckedChange={(checked: boolean) => setVibrationEnabled(checked)}
+                aria-label="Vibration"
                 disabled={!canVibrate}
+                className="h-7 w-12 data-checked:bg-brand data-unchecked:bg-surface-3"
               />
             </div>
             <div className="flex items-center justify-between gap-3 px-4 py-3">
@@ -190,14 +194,14 @@ export function SettingsScreen() {
           </div>
         </section>
         <section>
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Data
           </h2>
           <div className="mt-2 divide-y divide-line rounded-2xl border border-line bg-surface-2">
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="min-w-0">
                 <p className="font-medium text-sm">Export backup</p>
-                <p className="text-xs text-muted">
+                <p className="text-xs text-muted-foreground">
                   Workouts and history as a JSON file
                 </p>
               </div>
@@ -215,7 +219,9 @@ export function SettingsScreen() {
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="min-w-0">
                 <p className="font-medium text-sm">Import backup</p>
-                <p className="text-xs text-muted">Merges with your current data</p>
+                <p className="text-xs text-muted-foreground">
+                  Merges with your current data
+                </p>
               </div>
               <button
                 type="button"
@@ -244,7 +250,7 @@ export function SettingsScreen() {
             </p>
           )}
           {importStatus && (
-            <p className="mt-2 text-sm text-muted">{importStatus}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{importStatus}</p>
           )}
         </section>
       </div>

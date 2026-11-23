@@ -8,7 +8,7 @@ import {
   Navigate,
   redirect,
 } from "@tanstack/react-router";
-import { useThemeSync } from "@/features/theme/useThemeSync";
+import { useThemeSync } from "@/features/theme/hooks/useThemeSync";
 import { PWABadge } from "@/pwa/PWABadge";
 import { HomePage } from "@/pages/HomePage";
 import { HistoryPage } from "@/pages/HistoryPage";
@@ -16,14 +16,12 @@ import { EditorPage } from "@/pages/EditorPage";
 import { RunPage } from "@/pages/RunPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { TabsLayout } from "@/components/layout/TabsLayout";
-import { Toaster } from "./features/toast/Toaster";
 
 function RootComponent() {
   useThemeSync();
   return (
     <>
       <Outlet />
-      <Toaster />
       <PWABadge />
     </>
   );

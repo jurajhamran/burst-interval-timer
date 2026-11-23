@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Workout } from "@/features/workouts/types";
+import type { Workout } from "@/features/workouts/types/types";
 import { buildPhases, type Phase } from "./engine";
 
 interface TimerState {

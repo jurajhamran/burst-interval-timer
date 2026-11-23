@@ -1,4 +1,4 @@
-import type { HistoryEntry } from "./types";
+import type { HistoryEntry } from "./types/types";
 
 function dayKey(ts: number): string {
   const d = new Date(ts);

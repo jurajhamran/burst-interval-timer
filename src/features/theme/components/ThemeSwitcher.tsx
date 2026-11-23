@@ -1,5 +1,5 @@
 import { Sun, Monitor, Moon } from "lucide-react";
-import { useThemeStore, type ThemeMode } from "./store";
+import { useThemeStore, type ThemeMode } from "../store";
 
 export function ThemeSwitcher({ showLabels = false }: { showLabels?: boolean }) {
   const theme = useThemeStore((s) => s.theme);
@@ -38,12 +38,12 @@ export function ThemeSwitcher({ showLabels = false }: { showLabels?: boolean }) 
                 ? `flex flex-1 items-center justify-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-colors ${
                     active
                       ? "bg-surface-2 text-fg shadow-sm"
-                      : "text-muted hover:text-fg"
+                      : "text-muted-foreground hover:text-fg"
                   }`
                 : `size-8 rounded-full flex items-center justify-center transition-colors ${
                     active
                       ? "bg-surface-2 text-fg shadow-sm"
-                      : "text-muted hover:text-fg"
+                      : "text-muted-foreground hover:text-fg"
                   }`
             }
           >

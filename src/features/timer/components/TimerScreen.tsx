@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { formatDuration } from "@/lib/format";
-import type { Workout } from "@/features/workouts/types";
+import type { Workout } from "@/features/workouts/types/types";
 import { Controls } from "./Controls";
 import { ProgressRing } from "./ProgressRing";
 import { useTimerStore } from "../store";
@@ -79,13 +79,13 @@ export function TimerScreen({
       <div className="fixed inset-0 z-30 flex flex-col items-center justify-between overflow-y-auto px-6 pb-8 pt-[calc(3rem+env(safe-area-inset-top))] bg-surface text-fg text-center">
         <div className="my-auto space-y-4">
           <h1 className="text-4xl font-bold">Done!</h1>
-          <p className="text-muted">Great job completing {workout.name}</p>
+          <p className="text-muted-foreground">Great job completing {workout.name}</p>
         </div>
         <div className="w-full pb-[env(safe-area-inset-bottom)]">
           <button
             type="button"
             onClick={onExit}
-            className="w-full max-w-sm py-4 rounded-full bg-accent text-on-accent font-semibold text-base shadow-lg hover:opacity-90 transition-opacity"
+            className="w-full max-w-sm py-4 rounded-full bg-brand text-on-accent font-semibold text-base shadow-lg hover:opacity-90 transition-opacity"
           >
             Back
           </button>
@@ -110,7 +110,9 @@ export function TimerScreen({
     <div className={`fixed inset-0 z-30 flex flex-col transition-colors duration-300 ${bgClass}`}>
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-6 pb-8 pt-[calc(1.5rem+env(safe-area-inset-top))]">
       <header className="text-center text-fg">
-        <p className="text-sm text-fg/60">{workout.name}</p>
+        <p className="px-2 text-sm text-fg/60 break-words text-balance">
+          {workout.name}
+        </p>
         <p className="mt-1 text-lg font-semibold">
           {isPrepare
             ? "Get ready"

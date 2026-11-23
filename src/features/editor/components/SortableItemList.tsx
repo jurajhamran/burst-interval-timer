@@ -14,7 +14,7 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable";
-import type { SessionItem } from "@/features/workouts/types";
+import type { SessionItem } from "@/features/workouts/types/types";
 import { SortableItemRow } from "./SortableItemRow";
 
 export function SortableItemList({

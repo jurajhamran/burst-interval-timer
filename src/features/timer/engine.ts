@@ -1,4 +1,4 @@
-import type { ItemType, Workout } from "@/features/workouts/types";
+import type { ItemType, Workout } from "@/features/workouts/types/types";
 
 export type PhaseType = "prepare" | "round-rest" | ItemType;
 

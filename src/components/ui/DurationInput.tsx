@@ -1,4 +1,5 @@
 import { useState, useEffect, useId } from "react";
+import { Plus, Minus } from "lucide-react";
 import { formatDuration } from "@/lib/format";
 
 export function DurationInput({
@@ -74,9 +75,9 @@ export function DurationInput({
           setDraft(format(next));
         }}
         aria-label={`Decrease ${label}`}
-        className="size-9 rounded-full bg-surface-3 flex items-center justify-center font-medium text-muted hover:text-fg"
+        className="size-7 rounded-full bg-surface-3 flex items-center justify-center font-medium text-fg hover:text-fg"
       >
-        -
+        <Minus className="size-4" aria-hidden />
       </button>
 
       <input
@@ -106,9 +107,9 @@ export function DurationInput({
           setDraft(format(next));
         }}
         aria-label={`Increase ${label}`}
-        className="size-9 rounded-full bg-surface-3 flex items-center justify-center font-medium text-muted hover:text-fg"
+        className="size-7 rounded-full bg-surface-3 flex items-center justify-center font-medium text-fg hover:text-fg"
       >
-        +
+        <Plus className="size-4" aria-hidden />
       </button>
     </div>
   );

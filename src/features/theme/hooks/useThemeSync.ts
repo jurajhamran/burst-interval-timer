@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { useThemeStore } from "./store";
-import { applyTheme } from "./applyTheme";
+import { useThemeStore } from "../store";
+import { applyTheme } from "../applyTheme";
 
 export function useThemeSync(): void {
   const theme = useThemeStore((s) => s.theme);

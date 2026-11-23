@@ -2,81 +2,16 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
   DEFAULT_PREPARE,
-  DEFAULT_ROUND_REST,
   DEFAULT_SKIP_LAST_REST,
+  WorkoutSchema,
   type Workout,
-  type SessionItem,
-  type PrepareConfig,
-  type RoundRestConfig,
-} from "@/features/workouts/types";
+} from "@/features/workouts/types/types";
 import { getCopyName } from "./copyName";
 
 export function normalizeWorkout(raw: unknown): Workout | null {
-  if (typeof raw !== "object" || raw === null) return null;
-  const r = raw as Record<string, unknown>;
-
-  if (typeof r.id !== "string" || r.id.trim() === "") return null;
-  if (typeof r.name !== "string" || r.name.trim() === "") return null;
-  if (!Number.isInteger(r.rounds)) return null;
-  const rounds = r.rounds as number;
-  if (rounds < 1 || rounds > 99) return null;
-
-  if (!Array.isArray(r.items) || r.items.length === 0) return null;
-  const items: SessionItem[] = [];
-  for (const rawItem of r.items) {
-    if (typeof rawItem !== "object" || rawItem === null) return null;
-    const it = rawItem as Record<string, unknown>;
-    if (typeof it.id !== "string" || it.id.trim() === "") return null;
-    if (it.type !== "work" && it.type !== "rest") return null;
-    if (typeof it.label !== "string") return null;
-    if (!Number.isInteger(it.duration)) return null;
-    const duration = it.duration as number;
-    if (duration < 1 || duration > 3600) return null;
-    items.push({
-      id: it.id,
-      type: it.type,
-      label: it.label,
-      duration,
-    });
-  }
-
-  let prepare: PrepareConfig = { ...DEFAULT_PREPARE };
-  if (r.prepare !== undefined) {
-    if (typeof r.prepare !== "object" || r.prepare === null) return null;
-    const p = r.prepare as Record<string, unknown>;
-    if (typeof p.enabled !== "boolean") return null;
-    if (!Number.isInteger(p.duration)) return null;
-    const pd = p.duration as number;
-    if (pd < 1 || pd > 3600) return null;
-    prepare = { enabled: p.enabled, duration: pd };
-  }
-
-  let roundRest: RoundRestConfig = { ...DEFAULT_ROUND_REST };
-  if (r.roundRest !== undefined) {
-    if (typeof r.roundRest !== "object" || r.roundRest === null) return null;
-    const rr = r.roundRest as Record<string, unknown>;
-    if (typeof rr.enabled !== "boolean") return null;
-    if (!Number.isInteger(rr.duration)) return null;
-    const rd = rr.duration as number;
-    if (rd < 1 || rd > 3600) return null;
-    roundRest = { enabled: rr.enabled, duration: rd };
-  }
-
-  let skipLastRest: boolean = DEFAULT_SKIP_LAST_REST;
-  if (r.skipLastRest !== undefined) {
-    if (typeof r.skipLastRest !== "boolean") return null;
-    skipLastRest = r.skipLastRest;
-  }
-
-  return {
-    id: r.id,
-    name: r.name.trim(),
-    rounds,
-    items,
-    prepare,
-    roundRest,
-    skipLastRest,
-  };
+  const result = WorkoutSchema.safeParse(raw);
+  if (!result.success) return null;
+  return result.data;
 }
 
 interface WorkoutsState {

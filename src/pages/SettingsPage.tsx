@@ -1,4 +1,4 @@
-import { SettingsScreen } from "@/features/settings/SettingsScreen";
+import { SettingsScreen } from "@/features/settings/components/SettingsScreen";
 import "@/pwa/pwaInstall";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 

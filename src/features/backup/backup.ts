@@ -1,5 +1,5 @@
-import type { Workout } from "@/features/workouts/types";
-import type { HistoryEntry } from "@/features/history/types";
+import type { Workout } from "@/features/workouts/types/types";
+import type { HistoryEntry } from "@/features/history/types/types";
 import { normalizeWorkout } from "@/features/workouts/store";
 import { normalizeEntry } from "@/features/history/store";
 

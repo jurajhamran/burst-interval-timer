@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { WorkoutCard } from "@/features/workouts/components/WorkoutCard";
 import { WorkoutPreviewModal } from "@/features/workouts/components/WorkoutPreviewModal";
 import { useWorkoutsStore } from "@/features/workouts/store";
-import type { Workout } from "@/features/workouts/types";
+import type { Workout } from "@/features/workouts/types/types";
 import { Plus, Dumbbell } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -24,10 +24,10 @@ export function HomePage() {
           <Button
             variant="primary"
             size="md"
-            icon={Plus}
             onClick={() => navigate({ to: "/workout/new" })}
           >
-            <span className="md:hidden">New</span>
+            <Plus className="size-4" aria-hidden />
+             <span className="md:hidden">New</span>
             <span className="hidden md:inline">New workout</span>
           </Button>
         }
@@ -35,17 +35,17 @@ export function HomePage() {
 
       {workouts.length === 0 ? (
         <div className="flex w-full flex-col items-center gap-3 py-16 text-center">
-          <Dumbbell className="size-10 text-muted" />
+          <Dumbbell className="size-10 text-muted-foreground" />
           <p className="font-semibold">No workouts yet</p>
-          <p className="text-sm text-muted">
+          <p className="text-sm text-muted-foreground">
             Create your first workout to get started.
           </p>
           <Button
             variant="primary"
             size="md"
-            icon={Plus}
             onClick={() => navigate({ to: "/workout/new" })}
           >
+            <Plus className="size-4" aria-hidden />
             Create workout
           </Button>
         </div>

@@ -1,49 +1,36 @@
-import { create } from "zustand";
+import { toast as shadcnToast } from "@/components/ui/toast";
 
-export type ToastVariant = "success" | "info" | "error";
+export type ToastVariant = "success" | "info" | "error" | "delete";
 
-export interface ToastItem {
-  id: string;
-  message: string;
-  variant: ToastVariant;
-  duration: number | null; // ms; null = stays until dismissed
+export interface ToastOptions {
+  duration?: number | null;
   action?: { label: string; onClick: () => void };
 }
-
-type ToastOptions = Partial<Pick<ToastItem, "duration" | "action">>;
-
-const MAX_TOASTS = 3;
-
-interface ToastState {
-  toasts: ToastItem[];
-  show: (t: Omit<ToastItem, "id">) => string;
-  dismiss: (id: string) => void;
-}
-
-export const useToastStore = create<ToastState>((set) => ({
-  toasts: [],
-  show: (t) => {
-    const id = crypto.randomUUID();
-    set((s) => ({ toasts: [...s.toasts, { ...t, id }].slice(-MAX_TOASTS) }));
-    return id;
-  },
-  dismiss: (id) =>
-    set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
-}));
 
 const show =
   (variant: ToastVariant, defaultDuration: number) =>
   (message: string, opts: ToastOptions = {}) =>
-    useToastStore.getState().show({
-      message,
-      variant,
-      duration: defaultDuration,
-      ...opts,
+    shadcnToast.add({
+      title: message,
+      type: variant,
+      timeout: opts.duration === null ? 0 : (opts.duration ?? defaultDuration),
+      priority: variant === "error" ? "high" : "low",
+      ...(opts.action
+        ? {
+            actionProps: {
+              children: opts.action.label,
+              onClick: () => {
+                opts.action?.onClick();
+              },
+            },
+          }
+        : {}),
     });
 
 export const toast = {
   success: show("success", 4000),
+  delete: show("delete", 4000),
   info: show("info", 4000),
   error: show("error", 6000),
-  dismiss: (id: string) => useToastStore.getState().dismiss(id),
+  dismiss: (id: string) => shadcnToast.close(id),
 };

@@ -1,26 +1,12 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { HistoryEntry } from "./types";
+import type { HistoryEntry } from "./types/types";
+import { HistoryEntrySchema } from "./types/types";
 
 export function normalizeEntry(raw: unknown): HistoryEntry | null {
-  if (typeof raw !== "object" || raw === null) return null;
-  const r = raw as Record<string, unknown>;
-
-  if (typeof r.id !== "string" || r.id.trim() === "") return null;
-  if (typeof r.workoutId !== "string" || r.workoutId.trim() === "") return null;
-  if (typeof r.workoutName !== "string" || r.workoutName.trim() === "") return null;
-  if (typeof r.completedAt !== "number" || !Number.isFinite(r.completedAt) || r.completedAt <= 0) return null;
-  if (typeof r.durationSeconds !== "number" || !Number.isFinite(r.durationSeconds) || r.durationSeconds <= 0) return null;
-  if (typeof r.rounds !== "number" || !Number.isInteger(r.rounds) || r.rounds < 1) return null;
-
-  return {
-    id: r.id,
-    workoutId: r.workoutId,
-    workoutName: r.workoutName,
-    completedAt: r.completedAt,
-    durationSeconds: r.durationSeconds,
-    rounds: r.rounds,
-  };
+  const result = HistoryEntrySchema.safeParse(raw);
+  if (!result.success) return null;
+  return result.data;
 }
 
 interface HistoryState {

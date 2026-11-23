@@ -1,24 +1,39 @@
 import { useState, useEffect, useRef } from "react";
 import { useBlocker } from "@tanstack/react-router";
 import { X, Settings, ChevronDown } from "lucide-react";
-import type { Workout, SessionItem, ItemType } from "@/features/workouts/types";
+import type { Workout, SessionItem, ItemType } from "@/features/workouts/types/types";
 import {
   DEFAULT_PREPARE,
   DEFAULT_ROUND_REST,
   DEFAULT_SKIP_LAST_REST,
-} from "@/features/workouts/types";
+} from "@/features/workouts/types/types";
 import { formatDuration } from "@/lib/format";
 import { getTotalSeconds } from "@/features/timer/engine";
 import { PHASE_ICONS } from "@/features/timer/phaseIcons";
 import { SortableItemList } from "./SortableItemList";
 import { DurationInput } from "@/components/ui/DurationInput";
-import { Switch } from "@/components/ui/Switch";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { OverflowMenu } from "@/components/ui/OverflowMenu";
 import { Trash2, Copy } from "lucide-react";
-import { validateDraft } from "../validate";
 import { Button } from "@/components/ui/Button";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { WorkoutSchema } from "@/features/workouts/types/types";
 
 export function EditorScreen({
   workout,
@@ -33,27 +48,39 @@ export function EditorScreen({
   onDelete?: () => void;
   onDuplicate?: () => void;
 }) {
-  const [draft, setDraft] = useState<Workout>(() => {
-    if (workout) {
-      const cloned = JSON.parse(JSON.stringify(workout)) as Workout;
-      if (!cloned.prepare) cloned.prepare = { ...DEFAULT_PREPARE };
-      if (!cloned.roundRest) cloned.roundRest = { ...DEFAULT_ROUND_REST };
-      if (typeof cloned.skipLastRest !== "boolean")
-        cloned.skipLastRest = DEFAULT_SKIP_LAST_REST;
-      return cloned;
-    }
-    return {
-      id: crypto.randomUUID(),
-      name: "",
-      rounds: 8,
-      items: [
-        { id: crypto.randomUUID(), type: "work", label: "Work", duration: 20 },
-        { id: crypto.randomUUID(), type: "rest", label: "Rest", duration: 10 },
-      ],
-      prepare: { ...DEFAULT_PREPARE },
-      roundRest: { ...DEFAULT_ROUND_REST },
-      skipLastRest: DEFAULT_SKIP_LAST_REST,
-    };
+  const defaultValues: Workout = workout
+    ? (() => {
+        const cloned = JSON.parse(JSON.stringify(workout)) as Workout;
+        if (!cloned.prepare) cloned.prepare = { ...DEFAULT_PREPARE };
+        if (!cloned.roundRest) cloned.roundRest = { ...DEFAULT_ROUND_REST };
+        if (typeof cloned.skipLastRest !== "boolean")
+          cloned.skipLastRest = DEFAULT_SKIP_LAST_REST;
+        return cloned;
+      })()
+    : {
+        id: crypto.randomUUID(),
+        name: "",
+        rounds: 8,
+        items: [
+          { id: crypto.randomUUID(), type: "work", label: "Work", duration: 20 },
+          { id: crypto.randomUUID(), type: "rest", label: "Rest", duration: 10 },
+        ],
+        prepare: { ...DEFAULT_PREPARE },
+        roundRest: { ...DEFAULT_ROUND_REST },
+        skipLastRest: DEFAULT_SKIP_LAST_REST,
+      };
+
+  const form = useForm<z.input<typeof WorkoutSchema>>({
+    resolver: zodResolver(WorkoutSchema),
+    defaultValues: defaultValues as z.input<typeof WorkoutSchema>,
+    mode: "onSubmit",
+  });
+
+  const { register, control, handleSubmit, watch, formState } = form;
+  const { errors, isDirty } = formState;
+  const { append, remove, replace, update } = useFieldArray({
+    control,
+    name: "items",
   });
 
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
@@ -63,27 +90,27 @@ export function EditorScreen({
   const nameInputRef = useRef<HTMLInputElement>(null);
   const itemsSectionRef = useRef<HTMLDivElement>(null);
 
-  const initialDraftRef = useRef(draft);
   const skipGuardRef = useRef(false);
 
-  const prevItemsLengthRef = useRef(draft.items.length);
-  const dirty = JSON.stringify(draft) !== JSON.stringify(initialDraftRef.current);
-  const errors = validateDraft(draft);
+  const draft = watch() as Workout;
+  const items = (watch("items") ?? []) as SessionItem[];
 
+  const prevItemsLengthRef = useRef(items.length);
   useEffect(() => {
-    if (draft.items.length > prevItemsLengthRef.current) {
-      const lastItemEl = document.querySelector(`[data-item-id="${draft.items[draft.items.length - 1].id}"]`);
+    if (items.length > prevItemsLengthRef.current) {
+      const lastItem = items[items.length - 1];
+      const lastItemEl = document.querySelector(`[data-item-id="${lastItem?.id}"]`);
       if (lastItemEl) {
         lastItemEl.scrollIntoView({ block: "nearest", behavior: "smooth" });
       }
     }
-    prevItemsLengthRef.current = draft.items.length;
-  }, [draft.items]);
+    prevItemsLengthRef.current = items.length;
+  }, [items]);
 
-  const totalSeconds = getTotalSeconds(draft);
+  const totalSeconds = getTotalSeconds(draft as Workout);
 
   const blocker = useBlocker({
-    shouldBlockFn: () => dirty && !skipGuardRef.current,
+    shouldBlockFn: () => isDirty && !skipGuardRef.current,
     withResolver: true,
   });
 
@@ -94,28 +121,34 @@ export function EditorScreen({
       label: type === "work" ? "Work" : "Rest",
       duration: type === "work" ? 20 : 10,
     };
-    setDraft({ ...draft, items: [...draft.items, newItem] });
+    append(newItem);
   };
 
+  const nameReg = register("name");
+
   const handleSaveClick = () => {
-    if (Object.keys(errors).length > 0) {
-      setShowErrors(true);
-      if (errors.name) {
-        nameInputRef.current?.focus();
-        nameInputRef.current?.scrollIntoView({
-          block: "center",
-          behavior: "smooth",
-        });
-      } else if (errors.items) {
-        itemsSectionRef.current?.scrollIntoView({
-          block: "center",
-          behavior: "smooth",
-        });
-      }
-      return;
-    }
-    skipGuardRef.current = true;
-    onSave({ ...draft, name: draft.name.trim() });
+    handleSubmit(
+      (data) => {
+        const parsed = WorkoutSchema.parse(data);
+        skipGuardRef.current = true;
+        onSave({ ...parsed, name: parsed.name.trim() });
+      },
+      () => {
+        setShowErrors(true);
+        if (errors.name) {
+          nameInputRef.current?.focus();
+          nameInputRef.current?.scrollIntoView({
+            block: "center",
+            behavior: "smooth",
+          });
+        } else if (errors.items) {
+          itemsSectionRef.current?.scrollIntoView({
+            block: "center",
+            behavior: "smooth",
+          });
+        }
+      },
+    )();
   };
 
   const prepareEnabled = draft.prepare?.enabled ?? true;
@@ -128,9 +161,9 @@ export function EditorScreen({
   const RestIcon = PHASE_ICONS.rest;
 
   const settingsSummary = `${draft.rounds} rounds · Prepare ${
-    prepareEnabled ? formatDuration(draft.prepare.duration) : "off"
+    prepareEnabled ? formatDuration((draft.prepare?.duration ?? 0)) : "off"
   } · Round rest ${
-    roundRestEnabled ? formatDuration(draft.roundRest.duration) : "off"
+    roundRestEnabled ? formatDuration((draft.roundRest?.duration ?? 0)) : "off"
   } · Skip last rest ${skipLastRest ? "on" : "off"}`;
 
   return (
@@ -141,7 +174,7 @@ export function EditorScreen({
             type="button"
             onClick={onCancel}
             aria-label="Cancel"
-            className="p-1 text-muted hover:text-fg"
+            className="p-1 text-muted-foreground hover:text-fg"
           >
             <X className="size-6" />
           </button>
@@ -158,8 +191,8 @@ export function EditorScreen({
                         {
                           label: "Duplicate workout",
                           icon: Copy,
-                          disabled: dirty,
-                          hint: dirty ? "Save changes first" : undefined,
+                          disabled: isDirty,
+                          hint: isDirty ? "Save changes first" : undefined,
                           onSelect: () => {
                             skipGuardRef.current = true;
                             onDuplicate();
@@ -190,15 +223,17 @@ export function EditorScreen({
       <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain py-6">
         <PageContainer className="space-y-6 pb-6">
         <div className="bg-surface-2 border border-line rounded-2xl p-4">
-          <label htmlFor="workout-name-input" className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
+          <Label htmlFor="workout-name-input" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
             Workout name
-          </label>
-          <input
-            ref={nameInputRef}
+          </Label>
+          <Input
+            {...nameReg}
+            ref={(el) => {
+              nameReg.ref(el);
+              nameInputRef.current = el;
+            }}
             id="workout-name-input"
             type="text"
-            value={draft.name}
-            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
             placeholder="Workout name"
             aria-label="Workout name"
             maxLength={60}
@@ -210,7 +245,7 @@ export function EditorScreen({
           />
           {showErrors && errors.name && (
             <p id="name-error" role="alert" className="mt-1.5 text-sm text-work">
-              {errors.name}
+              {errors.name.message}
             </p>
           )}
         </div>
@@ -222,13 +257,13 @@ export function EditorScreen({
             onClick={() => setSettingsOpen(!settingsOpen)}
             className="flex w-full items-center gap-3 p-4 text-left hover:bg-surface-3/40 transition-colors"
           >
-            <Settings className="size-5 text-muted shrink-0" aria-hidden />
+            <Settings className="size-5 text-muted-foreground shrink-0" aria-hidden />
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-sm">Settings</p>
-              <p className="truncate text-xs text-muted mt-0.5">{settingsSummary}</p>
+              <p className="truncate text-xs text-muted-foreground mt-0.5">{settingsSummary}</p>
             </div>
             <ChevronDown
-              className={`size-5 text-muted shrink-0 transition-transform duration-200 ${
+              className={`size-5 text-muted-foreground shrink-0 transition-transform duration-200 ${
                 settingsOpen ? "rotate-180" : ""
               }`}
               aria-hidden
@@ -236,20 +271,28 @@ export function EditorScreen({
           </button>
 
           {settingsOpen && (
-            <div className="divide-y divide-line border-t border-line">
+            <div className="border-t border-line">
               <div className="flex items-center justify-between gap-3 px-4 py-3">
                 <span className="font-medium text-sm">Rounds</span>
-                <DurationInput
-                  label="Rounds"
-                  value={draft.rounds}
-                  onChange={(rounds) => setDraft({ ...draft, rounds })}
-                  min={1}
-                  max={99}
-                  step={1}
-                  format={String}
-                  parse={(s) => (/^\d{1,2}$/.test(s.trim()) ? Number(s) : null)}
+                <Controller
+                  control={control}
+                  name="rounds"
+                  render={({ field }) => (
+                    <DurationInput
+                      label="Rounds"
+                      value={field.value as number}
+                      onChange={field.onChange}
+                      min={1}
+                      max={99}
+                      step={1}
+                      format={String}
+                      parse={(s) => (/^\d{1,2}$/.test(s.trim()) ? Number(s) : null)}
+                    />
+                  )}
                 />
               </div>
+
+              <Separator />
 
               <div className="px-4 py-3 space-y-3">
                 <div className="flex items-center justify-between gap-3">
@@ -257,43 +300,45 @@ export function EditorScreen({
                     <PrepareIcon className="size-5 text-prepare shrink-0" aria-hidden />
                     <div className="min-w-0">
                       <p className="font-medium text-sm">Prepare</p>
-                      <p className="text-xs text-muted">Countdown before first round</p>
+                      <p className="text-xs text-muted-foreground">Countdown before first round</p>
                     </div>
                   </div>
-                  <Switch
-                    checked={prepareEnabled}
-                    onChange={() =>
-                      setDraft({
-                        ...draft,
-                        prepare: {
-                          ...draft.prepare,
-                          enabled: !prepareEnabled,
-                        },
-                      })
-                    }
-                    label="Enable prepare countdown"
+                  <Controller
+                    control={control}
+                    name="prepare.enabled"
+                    render={({ field }) => (
+                      <Switch
+                        checked={field.value as boolean}
+                        onCheckedChange={(checked: boolean) => field.onChange(checked)}
+                        aria-label="Enable prepare countdown"
+                        className="h-7 w-12 data-checked:bg-brand data-unchecked:bg-surface-3"
+                      />
+                    )}
                   />
                 </div>
                 {prepareEnabled && (
-                  <div className="flex items-center justify-between pt-2 border-t border-line">
-                    <span className="text-sm text-muted">Prepare time</span>
-                    <DurationInput
-                      label="Prepare time"
-                      value={draft.prepare.duration}
-                      onChange={(duration) =>
-                        setDraft({
-                          ...draft,
-                          prepare: { ...draft.prepare, duration },
-                        })
-                      }
-                      min={1}
-                      max={60}
-                      step={5}
-                      controlMin={5}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Prepare time</span>
+                    <Controller
+                      control={control}
+                      name="prepare.duration"
+                      render={({ field }) => (
+                        <DurationInput
+                          label="Prepare time"
+                          value={field.value as number}
+                          onChange={field.onChange}
+                          min={1}
+                          max={60}
+                          step={5}
+                          controlMin={5}
+                        />
+                      )}
                     />
                   </div>
                 )}
               </div>
+
+              <Separator />
 
               <div className="px-4 py-3 space-y-3">
                 <div className="flex items-center justify-between gap-3">
@@ -301,57 +346,61 @@ export function EditorScreen({
                     <RoundRestIcon className="size-5 text-break shrink-0" aria-hidden />
                     <div className="min-w-0">
                       <p className="font-medium text-sm">Rest between rounds</p>
-                      <p className="text-xs text-muted">Extra rest after each round</p>
+                      <p className="text-xs text-muted-foreground">Extra rest after each round</p>
                     </div>
                   </div>
-                  <Switch
-                    checked={roundRestEnabled}
-                    onChange={() =>
-                      setDraft({
-                        ...draft,
-                        roundRest: {
-                          ...draft.roundRest,
-                          enabled: !roundRestEnabled,
-                        },
-                      })
-                    }
-                    label="Enable rest between rounds"
+                  <Controller
+                    control={control}
+                    name="roundRest.enabled"
+                    render={({ field }) => (
+                      <Switch
+                        checked={field.value as boolean}
+                        onCheckedChange={(checked: boolean) => field.onChange(checked)}
+                        aria-label="Enable rest between rounds"
+                        className="h-7 w-12 data-checked:bg-brand data-unchecked:bg-surface-3"
+                      />
+                    )}
                   />
                 </div>
                 {roundRestEnabled && (
-                  <div className="flex items-center justify-between pt-2 border-t border-line">
+                  <div className="flex items-center justify-between">
                     <span className="text-sm text-break font-medium">Round rest time</span>
-                    <DurationInput
-                      label="Round rest time"
-                      value={draft.roundRest.duration}
-                      onChange={(duration) =>
-                        setDraft({
-                          ...draft,
-                          roundRest: { ...draft.roundRest, duration },
-                        })
-                      }
-                      min={1}
-                      max={300}
-                      step={5}
+                    <Controller
+                      control={control}
+                      name="roundRest.duration"
+                      render={({ field }) => (
+                        <DurationInput
+                          label="Round rest time"
+                          value={field.value as number}
+                          onChange={field.onChange}
+                          min={1}
+                          max={300}
+                          step={5}
+                        />
+                      )}
                     />
                   </div>
                 )}
               </div>
 
+              <Separator />
+
               <div className="flex items-center justify-between gap-3 px-4 py-3">
                 <div className="min-w-0">
                   <p className="font-medium text-sm">Skip last rest</p>
-                  <p className="text-xs text-muted">Drop final rest at the end</p>
+                  <p className="text-xs text-muted-foreground">Drop final rest at the end</p>
                 </div>
-                <Switch
-                  checked={skipLastRest}
-                  onChange={() =>
-                    setDraft({
-                      ...draft,
-                      skipLastRest: !skipLastRest,
-                    })
-                  }
-                  label="Skip last rest"
+                <Controller
+                  control={control}
+                  name="skipLastRest"
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value as boolean}
+                      onCheckedChange={(checked: boolean) => field.onChange(checked)}
+                      aria-label="Skip last rest"
+                      className="h-7 w-12 data-checked:bg-brand data-unchecked:bg-surface-3"
+                    />
+                  )}
                 />
               </div>
             </div>
@@ -360,46 +409,40 @@ export function EditorScreen({
 
         <div ref={itemsSectionRef} className="w-full space-y-3">
           <div className="flex items-baseline justify-between">
-            <h2 className="text-sm font-semibold tracking-wider text-muted uppercase">
-              Items ({draft.items.length})
+            <h2 className="text-sm font-semibold tracking-wider text-muted-foreground uppercase">
+              Items ({items.length})
             </h2>
-            <span className="text-xs text-muted">
+            <span className="text-xs text-muted-foreground">
               Drag the handle to reorder
             </span>
           </div>
 
-          {draft.items.length === 0 ? (
+          {items.length === 0 ? (
             <div
               className={`w-full rounded-2xl border border-dashed p-6 text-center text-sm ${
                 showErrors && errors.items
                   ? "border-work text-work"
-                  : "border-line text-muted"
+                  : "border-line text-muted-foreground"
               }`}
             >
               {showErrors && errors.items ? (
-                <p role="alert">{errors.items}</p>
+                <p role="alert">{errors.items.message?.toString() ?? "Add at least one work or rest item"}</p>
               ) : (
                 "No items yet. Add Work or Rest below."
               )}
             </div>
           ) : (
             <SortableItemList
-              items={draft.items}
-              onReorder={(items) => setDraft({ ...draft, items })}
-              onChangeItem={(id, patch) =>
-                setDraft({
-                  ...draft,
-                  items: draft.items.map((i) =>
-                    i.id === id ? { ...i, ...patch } : i
-                  ),
-                })
-              }
-              onDeleteItem={(id) =>
-                setDraft({
-                  ...draft,
-                  items: draft.items.filter((i) => i.id !== id),
-                })
-              }
+              items={items}
+              onReorder={(newItems) => replace(newItems)}
+              onChangeItem={(id, patch) => {
+                const idx = items.findIndex((i) => i.id === id);
+                if (idx >= 0) update(idx, { ...items[idx], ...patch });
+              }}
+              onDeleteItem={(id) => {
+                const idx = items.findIndex((i) => i.id === id);
+                if (idx >= 0) remove(idx);
+              }}
             />
           )}
         </div>
@@ -434,31 +477,40 @@ export function EditorScreen({
       </PageContainer>
       </div>
 
-      <ConfirmDialog
-        open={confirmOpen}
-        title={`Delete "${draft.name || "this workout"}"?`}
-        description="This can't be undone."
-        onConfirm={() => {
-          setConfirmOpen(false);
-          skipGuardRef.current = true;
-          onDelete?.();
-        }}
-        onCancel={() => setConfirmOpen(false)}
-      />
+      <AlertDialog open={confirmOpen} onOpenChange={(open) => { if (!open) setConfirmOpen(false); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{`Delete "${draft.name || "this workout"}"?`}</AlertDialogTitle>
+            <AlertDialogDescription>This can't be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmOpen(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                setConfirmOpen(false);
+                skipGuardRef.current = true;
+                onDelete?.();
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      <ConfirmDialog
-        open={blocker.status === "blocked"}
-        title="Discard changes?"
-        description="Your edits won't be saved."
-        confirmLabel="Discard"
-        cancelLabel="Keep editing"
-        onConfirm={() => {
-          blocker.proceed?.();
-        }}
-        onCancel={() => {
-          blocker.reset?.();
-        }}
-      />
+      <AlertDialog open={blocker.status === "blocked"} onOpenChange={() => {}}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard changes?</AlertDialogTitle>
+            <AlertDialogDescription>Your edits won't be saved.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => blocker.reset?.()}>Keep editing</AlertDialogCancel>
+            <AlertDialogAction onClick={() => blocker.proceed?.()}>Discard</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

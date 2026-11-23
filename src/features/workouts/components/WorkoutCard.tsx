@@ -1,8 +1,8 @@
-import { Play, Pencil, Eye, Clock, Repeat, Flame, Wind } from "lucide-react";
+import { Play, Eye, Clock, Repeat, Flame, Wind } from "lucide-react";
 import { formatDuration } from "@/lib/format";
 import { unlockAudio } from "@/lib/audio";
 import { getTotalSeconds } from "@/features/timer/engine";
-import type { Workout } from "../types";
+import type { Workout } from "@/features/workouts/types/types";
 
 export function WorkoutCard({
   workout,
@@ -19,16 +19,36 @@ export function WorkoutCard({
   const workCount = workout.items.filter((i) => i.type === "work").length;
   const restCount = workout.items.length - workCount;
 
+  const handleCardClick = () => {
+    if (onEdit) onEdit();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!onEdit) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onEdit();
+    }
+  };
+
   return (
-    <div className="group relative overflow-hidden rounded-3xl border border-line bg-surface-2 p-5 transition-all duration-300 hover:border-accent/50 hover:shadow-xl shadow-sm flex flex-col gap-4">
+    <div
+      role={onEdit ? "button" : undefined}
+      tabIndex={onEdit ? 0 : undefined}
+      onClick={handleCardClick}
+      onKeyDown={handleKeyDown}
+      className={`group relative overflow-hidden rounded-3xl border border-line bg-surface-2 p-5 transition-all duration-300 hover:border-brand/50 hover:shadow-xl shadow-sm flex flex-col gap-4 ${
+        onEdit ? "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/60" : ""
+      }`}
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2 mb-1.5">
-            <span className="inline-flex items-center gap-1 rounded-full bg-surface-3 px-2.5 py-0.5 text-xs font-semibold text-muted">
+            <span className="inline-flex items-center gap-1 rounded-full bg-surface-3 px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
               <Repeat className="size-3" aria-hidden />
               {workout.rounds} {workout.rounds === 1 ? "round" : "rounds"}
             </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-surface-3 px-2.5 py-0.5 text-xs font-semibold text-muted">
+            <span className="inline-flex items-center gap-1 rounded-full bg-surface-3 px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
               <Clock className="size-3" aria-hidden />
               {formatDuration(total)}
             </span>
@@ -46,7 +66,7 @@ export function WorkoutCard({
             onStart();
           }}
           aria-label={`Start ${workout.name}`}
-          className="flex items-center gap-2 rounded-2xl bg-accent px-5 py-3 text-on-accent font-semibold transition-transform active:scale-95 shadow-md hover:opacity-95 shrink-0"
+          className="flex items-center gap-2 rounded-2xl bg-brand px-5 py-3 text-on-accent font-semibold transition-transform active:scale-95 shadow-md hover:opacity-95 shrink-0"
         >
           <Play className="size-4 fill-current" />
           <span>Start</span>
@@ -64,7 +84,7 @@ export function WorkoutCard({
             />
           ))}
         </div>
-        <div className="flex flex-wrap justify-between items-center text-xs font-medium text-muted gap-2">
+        <div className="flex flex-wrap justify-between items-center text-xs font-medium text-muted-foreground gap-2">
           <span className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1 text-work font-semibold">
               <Flame className="size-3.5" aria-hidden />
@@ -93,26 +113,13 @@ export function WorkoutCard({
               e.stopPropagation();
               onPreview?.();
             }}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-surface-3 px-3 py-1.5 text-xs font-medium text-muted hover:text-fg hover:bg-surface-3/80 transition-transform active:scale-95"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-surface-3 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-fg hover:bg-surface-3/80 transition-transform active:scale-95"
             >
               <Eye className="size-3.5" aria-hidden />
               Preview timeline
             </button>
           )}
         </div>
-        {onEdit && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit?.();
-            }}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-surface-3 px-3 py-1.5 text-xs font-medium text-muted hover:text-fg hover:bg-surface-3/80 transition-transform active:scale-95"
-          >
-            <Pencil className="size-3.5" aria-hidden />
-            Edit workout
-          </button>
-        )}
       </div>
     </div>
   );

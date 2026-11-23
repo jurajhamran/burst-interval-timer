@@ -1,8 +1,9 @@
 import { useParams, useNavigate, Navigate } from "@tanstack/react-router";
 import { EditorScreen } from "@/features/editor/components/EditorScreen";
 import { useWorkoutsStore } from "@/features/workouts/store";
-import type { Workout } from "@/features/workouts/types";
+import type { Workout } from "@/features/workouts/types/types";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { toast } from "@/features/toast/store";
 
 export function EditorPage() {
   const params = useParams({ strict: false }) as { id?: string };
@@ -34,8 +35,10 @@ export function EditorPage() {
       onSave={(saved: Workout) => {
         if (isEdit) {
           updateWorkout(saved);
+          toast.success("Workout saved");
         } else {
           addWorkout(saved);
+          toast.success("Workout created");
         }
         navigate({ to: "/", replace: true });
       }}
@@ -43,6 +46,7 @@ export function EditorPage() {
         isEdit && id
           ? () => {
               deleteWorkout(id);
+              toast.delete("Workout deleted");
               navigate({ to: "/", replace: true });
             }
           : undefined

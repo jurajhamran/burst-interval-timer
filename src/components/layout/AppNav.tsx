@@ -35,13 +35,13 @@ export function AppNav() {
               <span
                 className={`rounded-full px-4 py-1 ${
                   active
-                    ? "bg-accent text-on-accent"
-                    : "bg-transparent text-muted"
+                    ? "bg-brand text-on-accent"
+                    : "bg-transparent text-muted-foreground"
                 }`}
               >
                 <Icon className="size-6" />
               </span>
-              <span className={active ? "text-fg" : "text-muted"}>
+              <span className={active ? "text-fg" : "text-muted-foreground"}>
                 {item.label}
               </span>
             </Link>

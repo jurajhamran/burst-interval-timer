@@ -36,9 +36,9 @@ export function HistoryPage() {
       <PageContainer>
         <PageHeader title="History" />
         <div className="flex w-full flex-col items-center justify-center gap-3 py-16 text-center">
-          <HistoryIcon className="size-12 text-muted" />
+          <HistoryIcon className="size-12 text-muted-foreground" />
           <p className="font-semibold">No sessions yet</p>
-          <p className="text-sm text-muted">
+          <p className="text-sm text-muted-foreground">
             Finish a workout and it shows up here.
           </p>
         </div>
@@ -57,20 +57,20 @@ export function HistoryPage() {
               <div className="text-2xl font-bold tabular-nums">
                 {stats.sessions}
               </div>
-              <div className="text-xs text-muted">Sessions</div>
+              <div className="text-xs text-muted-foreground">Sessions</div>
             </div>
             <div>
               <div className="text-2xl font-bold tabular-nums">
                 {formatTotal(stats.totalSeconds)}
               </div>
-              <div className="text-xs text-muted">Total time</div>
+              <div className="text-xs text-muted-foreground">Total time</div>
             </div>
             <div>
               <div className="flex items-center justify-center gap-1 text-2xl font-bold tabular-nums">
                 <Flame className="size-5 text-work" />
                 {stats.streak}
               </div>
-              <div className="text-xs text-muted">Day streak</div>
+              <div className="text-xs text-muted-foreground">Day streak</div>
             </div>
           </div>
         </div>
@@ -78,7 +78,7 @@ export function HistoryPage() {
         <div className="w-full space-y-6">
           {groups.map((group) => (
             <div key={group.key} className="w-full">
-              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">
+              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {group.label}
               </h2>
               <div className="w-full rounded-2xl border border-line bg-surface-2 divide-y divide-line overflow-hidden">
@@ -94,7 +94,7 @@ export function HistoryPage() {
                     >
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-medium">{entry.workoutName}</p>
-                        <p className="text-xs text-muted">
+                        <p className="text-xs text-muted-foreground">
                           {timeOfDay} · {entry.rounds} rounds
                         </p>
                       </div>
@@ -106,7 +106,7 @@ export function HistoryPage() {
                           type="button"
                           aria-label="Delete entry"
                           onClick={() => setDeleteId(entry.id)}
-                          className="text-muted hover:text-red-500"
+                          className="text-muted-foreground hover:text-red-500"
                         >
                           <Trash2 className="size-4" />
                         </button>
