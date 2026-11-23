@@ -1,4 +1,4 @@
-import type { Workout } from "@/features/workouts/types";
+import type { Workout } from "@/features/workouts/types/types";
 
 export function makeWorkout(overrides?: Partial<Workout>): Workout {
   const base: Workout = {

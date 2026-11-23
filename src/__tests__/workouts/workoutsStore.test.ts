@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { useWorkoutsStore, normalizeWorkout } from "@/features/workouts/store";
-import type { Workout } from "@/features/workouts/types";
+import type { Workout } from "@/features/workouts/types/types";
 
 describe("normalizeWorkout", () => {
   const validWorkout: Workout = {

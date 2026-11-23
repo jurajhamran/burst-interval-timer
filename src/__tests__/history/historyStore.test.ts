@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { useHistoryStore, normalizeEntry } from "@/features/history/store";
-import type { HistoryEntry } from "@/features/history/types";
+import type { HistoryEntry } from "@/features/history/types/types";
 
 describe("normalizeEntry", () => {
   const validEntry: HistoryEntry = {

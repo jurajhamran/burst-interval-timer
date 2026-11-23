@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { getStats, groupByDay } from "@/features/history/stats";
-import type { HistoryEntry } from "@/features/history/types";
+import type { HistoryEntry } from "@/features/history/types/types";
 
 function entry(completedAt: number, durationSeconds = 10): HistoryEntry {
   return {
