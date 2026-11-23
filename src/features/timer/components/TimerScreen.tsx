@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { Trophy } from "lucide-react";
 import { formatDuration } from "@/lib/format";
 import type { Workout } from "@/features/workouts/types/types";
 import { Controls } from "./Controls";
@@ -6,8 +7,11 @@ import { ProgressRing } from "./ProgressRing";
 import { useTimerStore } from "../store";
 import { useTimerLoop } from "../hooks/useTimerLoop";
 import { useWakeLock } from "../hooks/useWakeLock";
+import { useFinishConfetti } from "../hooks/useFinishConfetti";
+import { useSettingsStore } from "@/features/settings/store";
 import { cueCountdown, cuePhaseStart, cueFinish } from "../cues";
 import { PHASE_ICONS } from "../phaseIcons";
+import { pickFinishMessage } from "../finishMessages";
 
 export function TimerScreen({
   workout,
@@ -28,6 +32,14 @@ export function TimerScreen({
   const phases = useTimerStore((s) => s.phases);
   const index = useTimerStore((s) => s.index);
   const remainingMs = useTimerStore((s) => s.remainingMs);
+
+  const confettiEnabled = useSettingsStore((s) => s.confettiEnabled);
+  useFinishConfetti(finished && confettiEnabled);
+
+  const finishMessage = useMemo(
+    () => (finished ? pickFinishMessage() : null),
+    [finished],
+  );
 
   const prevIndexRef = useRef<number>(-1);
   const lastBeepSecRef = useRef<number | null>(null);
@@ -75,12 +87,15 @@ export function TimerScreen({
     }
   }, [finished]);
 
-  if (finished) {
+  if (finished && finishMessage) {
     return (
       <div className="fixed inset-0 z-30 flex flex-col items-center justify-between overflow-y-auto px-6 pb-8 pt-[calc(3rem+env(safe-area-inset-top))] bg-surface text-fg text-center">
         <div className="my-auto space-y-4">
-          <h1 className="text-4xl font-bold">Done!</h1>
-          <p className="text-muted-foreground">Great job completing {workout.name}</p>
+          <Trophy className="mx-auto size-12 text-brand" aria-hidden />
+          <h1 className="text-4xl font-bold">{finishMessage.title}</h1>
+          <p className="text-muted-foreground">
+            {finishMessage.subtitle(workout.name)}
+          </p>
         </div>
         <div className="w-full pb-[env(safe-area-inset-bottom)]">
           <button

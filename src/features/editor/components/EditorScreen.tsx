@@ -60,10 +60,10 @@ export function EditorScreen({
     : {
         id: crypto.randomUUID(),
         name: "",
-        rounds: 8,
+        rounds: 4,
         items: [
-          { id: crypto.randomUUID(), type: "work", label: "Work", duration: 20 },
-          { id: crypto.randomUUID(), type: "rest", label: "Rest", duration: 10 },
+          { id: crypto.randomUUID(), type: "work", label: "Work", duration: 45 },
+          { id: crypto.randomUUID(), type: "rest", label: "Rest", duration: 15 },
         ],
         prepare: { ...DEFAULT_PREPARE },
         roundRest: { ...DEFAULT_ROUND_REST },
