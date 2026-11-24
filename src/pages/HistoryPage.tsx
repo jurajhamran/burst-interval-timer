@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Flame, History as HistoryIcon, Trash2 } from "lucide-react";
 import { useHistoryStore } from "@/features/history/store";
 import { getStats, groupByDay } from "@/features/history/stats";
@@ -18,6 +18,10 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
+const HistoryCharts = lazy(
+  () => import("@/features/history/components/HistoryCharts"),
+);
+
 function formatTotal(seconds: number): string {
   if (seconds >= 3600) {
     const h = Math.floor(seconds / 3600);
@@ -25,6 +29,15 @@ function formatTotal(seconds: number): string {
     return `${h}h ${m}m`;
   }
   return formatDuration(seconds);
+}
+
+function ChartsFallback() {
+  return (
+    <div className="w-full space-y-6" aria-hidden>
+      <div className="h-[292px] w-full rounded-2xl border border-line bg-surface-2" />
+      <div className="h-[196px] w-full rounded-2xl border border-line bg-surface-2" />
+    </div>
+  );
 }
 
 export function HistoryPage() {
@@ -84,6 +97,10 @@ export function HistoryPage() {
           </div>
         </div>
 
+        <Suspense fallback={<ChartsFallback />}>
+          <HistoryCharts entries={entries} />
+        </Suspense>
+
         <div className="w-full space-y-6">
           {groups.map((group) => (
             <div key={group.key} className="w-full">
@@ -99,6 +116,7 @@ export function HistoryPage() {
                   return (
                     <div
                       key={entry.id}
+                      data-testid="session-entry"
                       className="flex w-full items-center justify-between gap-3 px-4 py-3"
                     >
                       <div className="min-w-0 flex-1">

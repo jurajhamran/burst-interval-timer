@@ -44,7 +44,9 @@ test.describe("timer", () => {
 
     await page.getByRole("link", { name: "History" }).click();
 
-    await expect(page.getByText("Fast Test")).toBeVisible();
-    await expect(page.getByText(/1 rounds/)).toBeVisible();
+    const rows = page.getByTestId("session-entry");
+    await expect(rows).toHaveCount(1);
+    await expect(rows.first()).toContainText("Fast Test");
+    await expect(rows.first()).toContainText("1 rounds");
   });
 });
