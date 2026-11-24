@@ -215,7 +215,7 @@ export function TimerScreen({
             </div>
           </ProgressRing>
 
-          <p className="timer-next text-center text-sm text-fg/60">
+          <p className="timer-next text-center text-lg text-fg/60">
             Next:{" "}
             <span className="font-medium text-fg">
               {nextPhase ? nextPhase.label : "Finish"}

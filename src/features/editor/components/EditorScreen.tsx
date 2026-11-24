@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useBlocker } from "@tanstack/react-router";
 import { X, Settings, ChevronDown } from "lucide-react";
 import type { Workout, SessionItem, ItemType } from "@/features/workouts/types/types";
@@ -93,7 +93,11 @@ export function EditorScreen({
   const skipGuardRef = useRef(false);
 
   const draft = watch() as Workout;
-  const items = (watch("items") ?? []) as SessionItem[];
+  const watchedItems = watch("items");
+  const items = useMemo(
+    () => (watchedItems ?? []) as SessionItem[],
+    [watchedItems],
+  );
 
   const prevItemsLengthRef = useRef(items.length);
   useEffect(() => {

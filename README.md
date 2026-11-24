@@ -25,6 +25,8 @@
 - `npm run test:run` - run Vitest once
 - `npm run test:ui` - open Vitest UI
 - `npm run test:coverage` - run tests with coverage
+- `npm run test:e2e` - run Playwright end-to-end tests
+- `npm run test:e2e:ui` - open Playwright UI mode
 
 ## Development
 
@@ -39,6 +41,15 @@ npm run dev
 npm run test:run
 npx tsc -b
 ```
+
+End-to-end tests use Playwright and run against the Vite dev server:
+
+```bash
+npx playwright install chromium
+npm run test:e2e
+```
+
+Specs live in `e2e/`: `home`, `editor`, `timer`, `history`, `settings`. Fixtures in `e2e/fixtures`, shared helpers in `e2e/support`.
 
 ## Project structure
 
