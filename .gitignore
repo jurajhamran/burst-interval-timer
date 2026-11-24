@@ -24,6 +24,11 @@ dev-dist
 *.sln
 *.sw?
 
+# Test artifacts
+test-results
+playwright-report
+blob-report
+
 coverage
 
 # Build info / caches
