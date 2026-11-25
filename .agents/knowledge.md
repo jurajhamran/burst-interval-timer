@@ -248,6 +248,14 @@ All stores use Zustand `persist` with `localStorage`. Storage keys keep the lega
 Effects live in `TimerScreen`, not the store: phase-start beep, countdown beeps at 3/2/1,
 finish triple beep, screen-reader announcements, focus move to the finish heading.
 
+`TimerScreen` layout contract: the progress ring contains **only the countdown**. The current
+exercise sits below the ring (phase icon above the label, then `Next: …`), so user-authored
+labels never have to fit inside a circle. The header keeps the workout name, round indicator
+and session time. Playback is three controls (previous / play-pause / next); leaving the
+session is a 44px `X` button pinned to the screen's top-right corner (`aria-label="Stop
+workout"`) and routed through the same `useBlocker` confirmation as any other exit. The
+countdown is sized with a container query on `.timer-ring`.
+
 `useWakeLock()` requests a screen wake lock while running and re-requests on visibility
 change. Audio needs a user gesture: `unlockAudio()` is called from the Start button and the
 settings "Test" button. `beep()` and `vibrate()` read the settings store imperatively and
@@ -373,8 +381,9 @@ Dark mode is a `.dark` class on `<html>` (`@custom-variant dark`), applied by
 `useThemeSync` (root route) keeps it in sync with the store and `prefers-color-scheme`.
 
 `index.css` also contains hand-written timer layout CSS (`.timer-layout`, `.timer-stage`,
-`.timer-ring`, `.timer-countdown`, ...) with a landscape media query that switches the timer
-to ring-left / controls-right on short viewports. Prefer editing those classes over
+`.timer-ring`, `.timer-countdown`, ...). A landscape media query switches the timer to
+ring-left / controls-right on short viewports; a container query on `.timer-ring` sizes the
+countdown, and short-portrait queries cap the ring. Prefer editing those classes over
 duplicating layout logic in components.
 
 ### 5.10 Layout shell
@@ -483,7 +492,7 @@ e2e/
 ├─ support/seed.ts          seedWorkouts / seedHistory via addInitScript
 ├─ home.spec.ts             render, preview, start
 ├─ editor.spec.ts           defaults, create, edit, delete
-├─ timer.spec.ts            pause/resume, finish screen, finish -> history
+├─ timer.spec.ts            pause/resume, stop confirmation, finish screen, finish -> history
 ├─ history.spec.ts          delete entry, clear all, charts + range dropdown
 └─ settings.spec.ts         toggle persistence, backup reminder, export
 ```

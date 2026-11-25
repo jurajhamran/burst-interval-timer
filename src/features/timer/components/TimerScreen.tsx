@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Trophy } from "lucide-react";
+import { Trophy, X } from "lucide-react";
 import { formatDuration } from "@/lib/format";
 import type { Workout } from "@/features/workouts/types/types";
 import { Controls } from "./Controls";
@@ -170,8 +170,23 @@ export function TimerScreen({
 
   const Icon = PHASE_ICONS[currentPhase.type];
 
+  const roundLabel = isPrepare
+    ? "First round"
+    : isRoundRest
+    ? `Round ${currentPhase.round} complete`
+    : `Round ${currentPhase.round} / ${workout.rounds}`;
+
   return (
     <div className={`fixed inset-0 z-30 flex flex-col transition-colors duration-300 ${bgClass}`}>
+      <button
+        type="button"
+        aria-label="Stop workout"
+        onClick={onExit}
+        className="absolute right-[calc(1rem+env(safe-area-inset-right))] top-[calc(1rem+env(safe-area-inset-top))] z-10 grid size-11 place-items-center rounded-full bg-fg/10 text-fg active:bg-fg/20"
+      >
+        <X className="size-5" />
+      </button>
+
       <div
         className="sr-only"
         role="status"
@@ -182,18 +197,12 @@ export function TimerScreen({
       </div>
       <div className="timer-layout mx-auto w-full max-w-md flex-1 px-6 pb-8 pt-[calc(1.5rem+env(safe-area-inset-top))]">
         <header className="timer-header text-center text-fg">
-          <p className="line-clamp-2 px-2 text-sm break-words text-balance [overflow-wrap:anywhere] text-fg/60">
+          <p className="line-clamp-2 px-12 text-sm break-words text-balance [overflow-wrap:anywhere] text-fg/70">
             {workout.name}
           </p>
           <div className="mt-1 flex flex-col items-center gap-0.5">
-            <p className="text-lg font-semibold">
-              {isPrepare
-                ? "Get ready"
-                : isRoundRest
-                ? `Round ${currentPhase.round} complete`
-                : `Round ${currentPhase.round} / ${workout.rounds}`}
-            </p>
-            <p className="text-xs font-medium tabular-nums text-fg/60">
+            <p className="text-lg font-semibold">{roundLabel}</p>
+            <p className="text-sm font-medium tabular-nums text-fg/60">
               {formatDuration(sessionRemainingSecs)} left
             </p>
           </div>
@@ -201,26 +210,26 @@ export function TimerScreen({
 
         <div className="timer-stage">
           <ProgressRing progress={progress} className="timer-ring">
-            <div className="timer-ring-content text-center">
-              <Icon className="mx-auto mb-2 size-7" aria-hidden />
-              <p
-                className="timer-phase-label text-sm font-semibold uppercase leading-tight tracking-[0.2em] text-balance"
-                title={currentPhase.label}
-              >
-                {currentPhase.label}
-              </p>
-              <p className="timer-countdown mt-2 text-7xl font-bold tabular-nums text-fg">
-                {formatDuration(remainingSecs)}
-              </p>
-            </div>
+            <p className="timer-countdown font-bold tabular-nums text-fg">
+              {formatDuration(remainingSecs)}
+            </p>
           </ProgressRing>
 
-          <p className="timer-next text-center text-lg text-fg/60">
-            Next:{" "}
-            <span className="font-medium text-fg">
-              {nextPhase ? nextPhase.label : "Finish"}
-            </span>
-          </p>
+          <div className="timer-phase text-center">
+            <Icon className="mx-auto size-7" aria-hidden />
+            <p
+              className="timer-phase-label mt-2 text-[1.625rem] font-semibold leading-snug text-balance text-fg"
+              title={currentPhase.label}
+            >
+              {currentPhase.label}
+            </p>
+            <p className="mt-3 text-base text-fg/60">
+              Next:{" "}
+              <span className="font-semibold text-fg">
+                {nextPhase ? nextPhase.label : "Finish"}
+              </span>
+            </p>
+          </div>
         </div>
 
         <div className="timer-controls-wrap text-fg pb-[env(safe-area-inset-bottom)]">
@@ -230,7 +239,6 @@ export function TimerScreen({
             onToggle={toggle}
             onPrevious={previous}
             onSkip={skip}
-            onStop={onExit}
           />
         </div>
       </div>

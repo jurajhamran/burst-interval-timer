@@ -59,7 +59,9 @@ export function ConfirmDialog({
       className="m-auto w-[calc(100%-2rem)] max-w-sm rounded-2xl border border-line bg-surface-2 p-5 text-fg shadow-xl backdrop:bg-[var(--overlay)] outline-none"
     >
       <h2 className="text-lg font-semibold">{title}</h2>
-      {description && <p className="mt-2 text-sm text-muted">{description}</p>}
+      {description && (
+        <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+      )}
       <div className="mt-5 flex justify-end gap-2">
         <button
           type="button"

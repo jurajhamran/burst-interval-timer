@@ -84,7 +84,7 @@ export function OverflowMenu({
                 <div className="flex flex-col">
                   <span>{item.label}</span>
                   {item.hint && (
-                    <span className="text-xs text-muted">{item.hint}</span>
+                    <span className="text-xs text-muted-foreground">{item.hint}</span>
                   )}
                 </div>
               </button>

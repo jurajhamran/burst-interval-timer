@@ -51,15 +51,22 @@ export function SortableItemRow({
           <GripVertical className="size-5" />
         </button>
 
-        <input
-          id={`item-label-${item.id}`}
-          name={`item-label-${item.id}`}
-          type="text"
-          value={item.label}
-          onChange={(e) => onChange({ label: e.target.value })}
-          placeholder="Label"
-          className="flex-1 min-w-0 bg-transparent font-medium"
-        />
+        {item.type === "work" && (
+          <input
+            readOnly={isDragging}
+            id={`item-label-${item.id}`}
+            name={`item-label-${item.id}`}
+            type="text"
+            value={item.label}
+            onChange={(e) => onChange({ label: e.target.value })}
+            placeholder="Label"
+            className="flex-1 min-w-0 bg-transparent font-medium"
+          />
+        )}
+
+        {item.type == "rest" && (
+          <span className="flex-1 min-w-0 font-medium">Rest</span>
+        )}
 
         <button
           type="button"

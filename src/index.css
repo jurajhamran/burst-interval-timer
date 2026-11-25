@@ -70,25 +70,49 @@
   flex: 1 1 0%;
   flex-direction: column;
   justify-content: center;
-  gap: 2rem;
+  gap: 1.75rem;
   min-height: 0;
 }
 
 .timer-ring {
+  container-type: inline-size;
   max-width: min(20rem, 100%);
 }
 
-.timer-ring-content {
-  width: 70%;
-  min-width: 0;
+.timer-countdown {
+  font-size: clamp(3rem, 13vw, 5.5rem);
+  font-size: clamp(3rem, 28cqw, 6rem);
+  line-height: 1;
 }
 
 .timer-phase-label {
   overflow-wrap: anywhere;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   overflow: hidden;
+}
+
+@media (orientation: portrait) and (max-height: 700px) {
+  .timer-stage {
+    gap: 1rem;
+  }
+
+  .timer-ring {
+    max-width: min(20rem, 40vh);
+    max-width: min(20rem, 40dvh);
+  }
+}
+
+@media (orientation: portrait) and (max-height: 600px) {
+  .timer-stage {
+    gap: 0.75rem;
+  }
+
+  .timer-ring {
+    max-width: min(20rem, 32vh);
+    max-width: min(20rem, 32dvh);
+  }
 }
 
 @media (orientation: landscape) and (max-height: 620px) {
@@ -99,7 +123,7 @@
     grid-template-rows: auto auto auto;
     grid-template-areas:
       "ring header"
-      "ring next"
+      "ring phase"
       "ring controls";
     align-items: center;
     align-content: center;
@@ -112,7 +136,7 @@
       max(1rem, env(safe-area-inset-left));
   }
 
-  /* Promote ring + next out of the stage so grid areas apply. */
+  /* Promote ring + phase out of the stage so grid areas apply. */
   .timer-stage {
     display: contents;
   }
@@ -131,28 +155,14 @@
     justify-self: center;
   }
 
-  .timer-next {
-    grid-area: next;
+  .timer-phase {
+    grid-area: phase;
     align-self: center;
   }
 
   .timer-controls-wrap {
     grid-area: controls;
     align-self: center;
-  }
-
-  .timer-ring-content {
-    width: 74%;
-  }
-
-  .timer-phase-label {
-    letter-spacing: 0.12em;
-  }
-
-  .timer-countdown {
-    font-size: clamp(1.75rem, 12vh, 4.5rem);
-    font-size: clamp(1.75rem, 12dvh, 4.5rem);
-    line-height: 1;
   }
 
   .timer-controls {

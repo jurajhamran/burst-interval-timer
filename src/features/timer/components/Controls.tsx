@@ -1,4 +1,4 @@
-import { Pause, Play, SkipBack, SkipForward, Square } from "lucide-react";
+import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 
 interface Props {
   running: boolean;
@@ -6,7 +6,6 @@ interface Props {
   onToggle: () => void;
   onPrevious: () => void;
   onSkip: () => void;
-  onStop: () => void;
 }
 
 const side =
@@ -18,13 +17,9 @@ export function Controls({
   onToggle,
   onPrevious,
   onSkip,
-  onStop,
 }: Props) {
   return (
     <div className="timer-controls flex items-center justify-center gap-6">
-      <button aria-label="Stop" onClick={onStop} className={side}>
-        <Square className="size-5 fill-current" />
-      </button>
       <button
         aria-label="Previous"
         onClick={onPrevious}
