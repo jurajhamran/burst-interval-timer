@@ -1,15 +1,30 @@
 import { dayKey } from "./stats";
 import type { HistoryEntry } from "./types/types";
 
-export interface DailyVolume {
+/** Selectable windows for the volume chart. */
+export type VolumeRange = 7 | 14 | 30 | "all";
+
+export type VolumeGranularity = "day" | "week";
+
+export interface VolumePoint {
   key: string;
   /** Short axis tick label. */
   label: string;
   /** Longer label for tooltips and screen readers. */
   fullLabel: string;
-  dayStart: number;
+  /** Start of the bucket at local midnight, epoch ms. */
+  start: number;
   seconds: number;
   sessions: number;
+}
+
+export interface VolumeSeries {
+  points: VolumePoint[];
+  granularity: VolumeGranularity;
+  /** Lowercase phrase for prose, e.g. "last 7 days" or "all time". */
+  rangeLabel: string;
+  /** Capitalized phrase for the card header, e.g. "Last 7 days". */
+  rangeTitle: string;
 }
 
 export interface WorkoutSlice {
@@ -18,11 +33,16 @@ export interface WorkoutSlice {
   sessions: number;
 }
 
-export interface WeekDelta {
-  thisWeekSeconds: number;
-  lastWeekSeconds: number;
+export interface RangeDelta {
+  currentSeconds: number;
+  previousSeconds: number;
   deltaSeconds: number;
 }
+
+/** Ranges longer than this switch from daily to weekly buckets. */
+export const WEEKLY_THRESHOLD_DAYS = 90;
+
+const DAY_MS = 86_400_000;
 
 function startOfLocalDay(ts: number): Date {
   const d = new Date(ts);
@@ -30,59 +50,95 @@ function startOfLocalDay(ts: number): Date {
   return d;
 }
 
+/** Whole local days between two local midnights. DST-safe. */
+function daysBetween(from: Date, to: Date): number {
+  return Math.round((to.getTime() - from.getTime()) / DAY_MS);
+}
+
+function rangeLabels(range: VolumeRange): { label: string; title: string } {
+  if (range === "all") return { label: "all time", title: "All time" };
+  return { label: `last ${range} days`, title: `Last ${range} days` };
+}
+
 /**
- * Sessions and time per local day for the last `days` days, oldest first.
- * Days without sessions are included with zero values so gaps stay visible.
+ * Sessions and time per bucket for the selected range, oldest first.
+ * Buckets without sessions are included with zero values so gaps stay visible.
+ *
+ * Fixed ranges use one bucket per local day. "All time" starts at the earliest
+ * recorded session and switches to weekly buckets once the span exceeds
+ * `WEEKLY_THRESHOLD_DAYS`, so a long history stays readable.
  */
-export function getDailyVolume(
+export function getVolume(
   entries: HistoryEntry[],
-  days: number,
+  range: VolumeRange,
   now: number = Date.now(),
-): DailyVolume[] {
-  const span = Math.max(1, Math.floor(days));
+): VolumeSeries {
   const today = startOfLocalDay(now);
+  const { label: rangeLabel, title: rangeTitle } = rangeLabels(range);
+
+  let earliest: Date | null = null;
+  for (const entry of entries) {
+    const day = startOfLocalDay(entry.completedAt);
+    if (!earliest || day.getTime() < earliest.getTime()) earliest = day;
+  }
+
+  if (range === "all" && !earliest) {
+    return { points: [], granularity: "day", rangeLabel, rangeTitle };
+  }
+
+  const spanDays =
+    range === "all"
+      ? Math.max(1, daysBetween(earliest as Date, today) + 1)
+      : range;
+
+  const granularity: VolumeGranularity =
+    spanDays > WEEKLY_THRESHOLD_DAYS ? "week" : "day";
+  const bucketDays = granularity === "week" ? 7 : 1;
+  const bucketCount = Math.ceil(spanDays / bucketDays);
 
   const tickFormatter = new Intl.DateTimeFormat(
     undefined,
-    span <= 7
+    granularity === "day" && spanDays <= 7
       ? { weekday: "short" }
       : { month: "short", day: "numeric" },
   );
-  const fullFormatter = new Intl.DateTimeFormat(undefined, {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  });
+  const fullFormatter = new Intl.DateTimeFormat(
+    undefined,
+    granularity === "week"
+      ? { month: "short", day: "numeric" }
+      : { weekday: "short", day: "numeric", month: "short" },
+  );
 
-  const buckets: DailyVolume[] = [];
-  const byKey = new Map<string, DailyVolume>();
+  const points: VolumePoint[] = [];
+  for (let index = 0; index < bucketCount; index++) {
+    const daysBack = (bucketCount - 1 - index) * bucketDays;
+    const start = new Date(today);
+    start.setDate(today.getDate() - daysBack - (bucketDays - 1));
+    start.setHours(0, 0, 0, 0);
 
-  for (let offset = span - 1; offset >= 0; offset--) {
-    const date = new Date(today);
-    date.setDate(today.getDate() - offset);
-    date.setHours(0, 0, 0, 0);
-
-    const bucket: DailyVolume = {
-      key: dayKey(date.getTime()),
-      label: tickFormatter.format(date),
-      fullLabel: fullFormatter.format(date),
-      dayStart: date.getTime(),
+    points.push({
+      key: dayKey(start.getTime()),
+      label: tickFormatter.format(start),
+      fullLabel:
+        granularity === "week"
+          ? `Week of ${fullFormatter.format(start)}`
+          : fullFormatter.format(start),
+      start: start.getTime(),
       seconds: 0,
       sessions: 0,
-    };
-
-    buckets.push(bucket);
-    byKey.set(bucket.key, bucket);
+    });
   }
 
   for (const entry of entries) {
-    const bucket = byKey.get(dayKey(entry.completedAt));
-    if (!bucket) continue;
-    bucket.seconds += entry.durationSeconds;
-    bucket.sessions += 1;
+    const offset = daysBetween(startOfLocalDay(entry.completedAt), today);
+    if (offset < 0) continue;
+    const index = bucketCount - 1 - Math.floor(offset / bucketDays);
+    if (index < 0 || index >= bucketCount) continue;
+    points[index].seconds += entry.durationSeconds;
+    points[index].sessions += 1;
   }
 
-  return buckets;
+  return { points, granularity, rangeLabel, rangeTitle };
 }
 
 /**
@@ -129,36 +185,38 @@ export function getWorkoutBreakdown(
 }
 
 /**
- * Rolling 7-day comparison: today and the six days before it, against the
- * seven days before that.
+ * Compares the last `days` days (including today) against the `days` before
+ * them, matching the window shown in the volume chart.
  */
-export function getWeekDelta(
+export function getRangeDelta(
   entries: HistoryEntry[],
+  days: number,
   now: number = Date.now(),
-): WeekDelta {
+): RangeDelta {
+  const span = Math.max(1, Math.floor(days));
   const today = startOfLocalDay(now);
-  const thisWeekStart = new Date(today);
-  thisWeekStart.setDate(today.getDate() - 6);
-  const lastWeekStart = new Date(thisWeekStart);
-  lastWeekStart.setDate(thisWeekStart.getDate() - 7);
+  const currentStart = new Date(today);
+  currentStart.setDate(today.getDate() - (span - 1));
+  const previousStart = new Date(currentStart);
+  previousStart.setDate(currentStart.getDate() - span);
 
-  const thisStart = thisWeekStart.getTime();
-  const lastStart = lastWeekStart.getTime();
+  const currentFrom = currentStart.getTime();
+  const previousFrom = previousStart.getTime();
 
-  let thisWeekSeconds = 0;
-  let lastWeekSeconds = 0;
+  let currentSeconds = 0;
+  let previousSeconds = 0;
 
   for (const entry of entries) {
-    if (entry.completedAt >= thisStart) {
-      thisWeekSeconds += entry.durationSeconds;
-    } else if (entry.completedAt >= lastStart) {
-      lastWeekSeconds += entry.durationSeconds;
+    if (entry.completedAt >= currentFrom) {
+      currentSeconds += entry.durationSeconds;
+    } else if (entry.completedAt >= previousFrom) {
+      previousSeconds += entry.durationSeconds;
     }
   }
 
   return {
-    thisWeekSeconds,
-    lastWeekSeconds,
-    deltaSeconds: thisWeekSeconds - lastWeekSeconds,
+    currentSeconds,
+    previousSeconds,
+    deltaSeconds: currentSeconds - previousSeconds,
   };
 }

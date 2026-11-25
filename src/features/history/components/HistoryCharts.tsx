@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Check, ChevronDown } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -9,16 +10,24 @@ import {
   YAxis,
 } from "recharts";
 import {
-  getDailyVolume,
-  getWeekDelta,
+  getRangeDelta,
+  getVolume,
   getWorkoutBreakdown,
-  type DailyVolume,
-  type WeekDelta,
+  type RangeDelta,
+  type VolumePoint,
+  type VolumeRange,
   type WorkoutSlice,
 } from "../charts";
 import type { HistoryEntry } from "../types/types";
 
 const VOLUME_HEIGHT = 176;
+
+const RANGE_OPTIONS: { value: VolumeRange; short: string; label: string }[] = [
+  { value: 7, short: "7d", label: "Last 7 days" },
+  { value: 14, short: "14d", label: "Last 14 days" },
+  { value: 30, short: "30d", label: "Last 30 days" },
+  { value: "all", short: "All", label: "All time" },
+];
 
 function formatSecondsShort(seconds: number): string {
   if (seconds <= 0) return "0m";
@@ -44,36 +53,84 @@ function truncateName(name: string, max = 16): string {
   return name.length > max ? `${name.slice(0, max - 1)}…` : name;
 }
 
-type Range = 7 | 30;
-
-function RangeToggle({
+function RangeMenu({
   value,
   onChange,
 }: {
-  value: Range;
-  onChange: (value: Range) => void;
+  value: VolumeRange;
+  onChange: (value: VolumeRange) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node | null;
+      if (!containerRef.current?.contains(target)) setOpen(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  const selected =
+    RANGE_OPTIONS.find((option) => option.value === value) ?? RANGE_OPTIONS[0];
+
   return (
-    <div className="inline-flex rounded-full bg-surface-3 p-1">
-      {([7, 30] as const).map((days) => {
-        const active = value === days;
-        return (
-          <button
-            key={days}
-            type="button"
-            aria-label={`${days} days`}
-            aria-pressed={active}
-            onClick={() => onChange(days)}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-              active
-                ? "bg-surface-2 text-fg shadow-sm"
-                : "text-muted-foreground hover:text-fg"
-            }`}
-          >
-            {days}d
-          </button>
-        );
-      })}
+    <div ref={containerRef} className="relative">
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`Chart range: ${selected.label}`}
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-1 rounded-full bg-surface-3 py-1 pl-3 pr-2 text-xs font-medium text-fg transition-colors hover:bg-line"
+      >
+        {selected.short}
+        <ChevronDown
+          className={`size-3.5 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          aria-label="Chart range"
+          className="absolute right-0 top-full z-20 mt-1 w-44 rounded-2xl border border-line bg-surface-2 p-1 shadow-xl"
+        >
+          {RANGE_OPTIONS.map((option) => {
+            const active = option.value === value;
+            return (
+              <button
+                key={option.short}
+                type="button"
+                role="menuitemradio"
+                aria-checked={active}
+                onClick={() => {
+                  onChange(option.value);
+                  setOpen(false);
+                  triggerRef.current?.focus();
+                }}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-fg hover:bg-surface-3"
+              >
+                <span className="flex-1">{option.label}</span>
+                {active && <Check className="size-4 text-rest" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -107,7 +164,7 @@ function VolumeTooltip({
   payload,
 }: {
   active?: boolean;
-  payload?: { payload?: DailyVolume }[];
+  payload?: { payload?: VolumePoint }[];
 }) {
   const bucket = payload?.[0]?.payload;
   if (!active || !bucket) return null;
@@ -143,13 +200,20 @@ function WorkoutTooltip({
 }
 
 export default function HistoryCharts({ entries }: { entries: HistoryEntry[] }) {
-  const [range, setRange] = useState<Range>(7);
+  const [range, setRange] = useState<VolumeRange>(7);
   const now = Date.now();
 
-  const volume = getDailyVolume(entries, range, now);
-  const totalSeconds = volume.reduce((sum, day) => sum + day.seconds, 0);
-  const totalSessions = volume.reduce((sum, day) => sum + day.sessions, 0);
-  const week = getWeekDelta(entries, now);
+  const series = getVolume(entries, range, now);
+  const deltaDays = typeof range === "number" ? range : null;
+  const delta = deltaDays === null ? null : getRangeDelta(entries, deltaDays, now);
+
+  const totalSeconds = series.points.reduce((sum, day) => sum + day.seconds, 0);
+  const totalSessions = series.points.reduce((sum, day) => sum + day.sessions, 0);
+
+  const pointCount = series.points.length;
+  const barSize = pointCount <= 7 ? 28 : pointCount <= 14 ? 18 : 10;
+  const barGap = pointCount <= 7 ? "22%" : "12%";
+  const tickInterval = Math.max(0, Math.ceil(pointCount / 8) - 1);
 
   const breakdown = getWorkoutBreakdown(entries);
   const breakdownRows = breakdown.map((slice) => ({
@@ -158,7 +222,7 @@ export default function HistoryCharts({ entries }: { entries: HistoryEntry[] }) 
     secondsLabel: formatSecondsShort(slice.seconds),
   }));
 
-  const volumeSummary = `Training time per day, last ${range} days. ${formatSecondsShort(
+  const volumeSummary = `Training time per ${series.granularity}, ${series.rangeLabel}. ${formatSecondsShort(
     totalSeconds,
   )} across ${sessionLabel(totalSessions)}.`;
   const breakdownSummary = `Time by workout, all time. ${breakdown
@@ -173,20 +237,24 @@ export default function HistoryCharts({ entries }: { entries: HistoryEntry[] }) 
       >
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold">Training volume</h2>
-          <RangeToggle value={range} onChange={setRange} />
+          <RangeMenu value={range} onChange={setRange} />
         </div>
 
         <p className="mt-1 text-xs text-muted-foreground">
-          Last 7 days{" "}
+          {series.rangeTitle}:{" "}
           <span className="font-medium tabular-nums text-fg">
-            {formatSecondsShort(week.thisWeekSeconds)}
+            {formatSecondsShort(totalSeconds)}
           </span>
-          <WeekDeltaText week={week} />
+          {delta && deltaDays !== null && (
+            <RangeDeltaText delta={delta} days={deltaDays} />
+          )}
         </p>
 
-        {totalSeconds === 0 ? (
+        {pointCount === 0 || totalSeconds === 0 ? (
           <p className="py-10 text-center text-xs text-muted-foreground">
-            No sessions in the last {range} days.
+            {pointCount === 0
+              ? "No sessions recorded yet."
+              : `No sessions in the ${series.rangeLabel}.`}
           </p>
         ) : (
           <figure className="mt-3">
@@ -194,15 +262,15 @@ export default function HistoryCharts({ entries }: { entries: HistoryEntry[] }) 
             <div className="w-full min-w-0">
               <ResponsiveContainer width="100%" height={VOLUME_HEIGHT}>
                 <BarChart
-                  data={volume}
+                  data={series.points}
                   margin={{ top: 8, right: 20, left: 20, bottom: 0 }}
-                  barCategoryGap={range === 7 ? "22%" : "12%"}
+                  barCategoryGap={barGap}
                 >
                   <XAxis
                     dataKey="label"
                     tickLine={false}
                     axisLine={{ stroke: "var(--color-line)" }}
-                    interval={range === 7 ? 0 : 4}
+                    interval={tickInterval}
                     tick={{
                       fill: "var(--color-muted-foreground)",
                       fontSize: 11,
@@ -218,7 +286,7 @@ export default function HistoryCharts({ entries }: { entries: HistoryEntry[] }) 
                     dataKey="seconds"
                     fill="var(--color-work)"
                     radius={[4, 4, 0, 0]}
-                    maxBarSize={range === 7 ? 28 : 10}
+                    maxBarSize={barSize}
                     isAnimationActive={false}
                   />
                 </BarChart>
@@ -289,24 +357,25 @@ export default function HistoryCharts({ entries }: { entries: HistoryEntry[] }) 
   );
 }
 
-function WeekDeltaText({ week }: { week: WeekDelta }) {
-  if (week.lastWeekSeconds === 0) {
-    return <> · no data for the previous 7 days</>;
+function RangeDeltaText({ delta, days }: { delta: RangeDelta; days: number }) {
+  if (delta.previousSeconds === 0) {
+    return <> · no data for the previous {days} days</>;
   }
 
-  if (week.deltaSeconds === 0) {
-    return <> · same as the previous 7 days</>;
+  if (delta.deltaSeconds === 0) {
+    return <> · same as the previous {days} days</>;
   }
 
-  const sign = week.deltaSeconds > 0 ? "+" : "-";
-  const tone = week.deltaSeconds > 0 ? "text-rest" : "text-work";
+  const sign = delta.deltaSeconds > 0 ? "+" : "-";
+  const tone = delta.deltaSeconds > 0 ? "text-rest" : "text-work";
 
   return (
     <>
       {" · "}
       <span className={`tabular-nums ${tone}`}>
         {sign}
-        {formatSecondsShort(Math.abs(week.deltaSeconds))} vs previous 7 days
+        {formatSecondsShort(Math.abs(delta.deltaSeconds))} vs previous {days}{" "}
+        days
       </span>
     </>
   );

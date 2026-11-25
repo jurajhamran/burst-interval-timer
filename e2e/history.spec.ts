@@ -39,26 +39,46 @@ test.describe("history", () => {
 
     const volume = page.getByRole("region", { name: "Training volume" });
     const breakdown = page.getByRole("region", { name: "Time by workout" });
+    const volumeSummary = volume.locator("figcaption");
+    const bars = volume.locator(".recharts-bar-rectangle");
 
     await expect(volume).toBeVisible();
     await expect(breakdown).toBeVisible();
 
-    const volumeSummary = volume.locator("figcaption");
+    // Defaults to the last 7 days.
     await expect(volumeSummary).toContainText("last 7 days");
     await expect(volumeSummary).toContainText("31m across 3 sessions");
     await expect(page.getByText("+11m vs previous 7 days")).toBeVisible();
-
-    const bars = volume.locator(".recharts-bar-rectangle");
     await expect(bars).toHaveCount(3);
 
-    await page.getByRole("button", { name: "30 days" }).click();
+    // Selecting 14 days from the dropdown widens the window.
+    await page.getByRole("button", { name: "Chart range: Last 7 days" }).click();
+    await page.getByRole("menuitemradio", { name: "Last 14 days" }).click();
 
     await expect(
-      page.getByRole("button", { name: "30 days" }),
-    ).toHaveAttribute("aria-pressed", "true");
+      page.getByRole("button", { name: "Chart range: Last 14 days" }),
+    ).toBeVisible();
+    await expect(volumeSummary).toContainText("last 14 days");
+    await expect(volumeSummary).toContainText("51m across 4 sessions");
+    await expect(bars).toHaveCount(4);
+
+    await page.getByRole("button", { name: "Chart range: Last 14 days" }).click();
+    await page.getByRole("menuitemradio", { name: "Last 30 days" }).click();
+
     await expect(volumeSummary).toContainText("last 30 days");
     await expect(volumeSummary).toContainText("51m across 4 sessions");
     await expect(bars).toHaveCount(4);
+
+    // All time covers the full history and drops the previous-period delta.
+    await page.getByRole("button", { name: "Chart range: Last 30 days" }).click();
+    await page.getByRole("menuitemradio", { name: "All time" }).click();
+
+    await expect(
+      page.getByRole("button", { name: "Chart range: All time" }),
+    ).toBeVisible();
+    await expect(volumeSummary).toContainText("all time");
+    await expect(volumeSummary).toContainText("51m across 4 sessions");
+    await expect(page.getByText("vs previous 7 days")).toHaveCount(0);
 
     await expect(
       breakdown.getByText("All time", { exact: true }),

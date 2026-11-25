@@ -185,18 +185,18 @@ export function TimerScreen({
           <p className="line-clamp-2 px-2 text-sm break-words text-balance [overflow-wrap:anywhere] text-fg/60">
             {workout.name}
           </p>
-          <p className="mt-1 flex flex-wrap items-center justify-center gap-x-2 text-lg font-semibold">
-            <span>
+          <div className="mt-1 flex flex-col items-center gap-0.5">
+            <p className="text-lg font-semibold">
               {isPrepare
                 ? "Get ready"
                 : isRoundRest
                 ? `Round ${currentPhase.round} complete`
                 : `Round ${currentPhase.round} / ${workout.rounds}`}
-            </span>
-            <span className="text-xs font-medium tabular-nums text-fg/60">
+            </p>
+            <p className="text-xs font-medium tabular-nums text-fg/60">
               {formatDuration(sessionRemainingSecs)} left
-            </span>
-          </p>
+            </p>
+          </div>
         </header>
 
         <div className="timer-stage">

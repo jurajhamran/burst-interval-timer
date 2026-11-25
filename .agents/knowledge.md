@@ -279,12 +279,18 @@ confirmation. `durationSeconds` is the **planned** total, not elapsed wall-clock
 
 `features/history/charts.ts` (pure, unit-tested):
 
-- `getDailyVolume(entries, days, now)` -> one bucket per day, **zero-filled**, oldest first.
-  Days are built by decrementing a `Date` with `setDate`, which is DST-safe. Tick label is
-  weekday for <= 7 days, `Mon D` for longer ranges.
+- `getVolume(entries, range, now)` -> `{ points, granularity, rangeLabel, rangeTitle }`,
+  **zero-filled**, oldest first. `range` is `7 | 14 | 30 | "all"`. Days are built by
+  decrementing a `Date` with `setDate`, which is DST-safe. Tick label is weekday for <= 7
+  days, `Mon D` for longer ranges.
+- "All time" starts at the earliest recorded session. Up to `WEEKLY_THRESHOLD_DAYS` (90) it
+  uses daily buckets; beyond that it switches to weekly buckets so a years-long history does
+  not become invisible 1px bars. The caption states the granularity.
 - `getWorkoutBreakdown(entries, limit = 5)` -> grouped by workout name, sorted by seconds
-  then sessions, remainder folded into one `"Other"` slice.
-- `getWeekDelta(entries, now)` -> rolling 7 days vs the previous 7 days.
+  then sessions, remainder folded into one `"Other"` slice. Always all-time, independent of
+  the volume range.
+- `getRangeDelta(entries, days, now)` -> the last `days` days vs the `days` before them,
+  matching the selected range. Not shown for "All time" (nothing precedes it).
 
 `features/history/components/HistoryCharts.tsx` renders both charts with Recharts and is
 **lazy-loaded** from `HistoryPage` so the library stays out of the entry chunk:
@@ -307,6 +313,8 @@ Chart rendering rules that matter:
   long workout names onto two lines.
 - Each chart is a `<section aria-label="...">` (maps to `role="region"`) containing a
   `<figure>` with an `sr-only` `<figcaption>` that summarizes the data for screen readers.
+- The volume card header has a `RangeMenu` dropdown (`7d` / `14d` / `30d` / `All`), defaulting
+  to 7 days. Items are `role="menuitemradio"`; E2E selects them by name, not by index.
 - When the selected range has no sessions, the chart is replaced by a short text message
   rather than an empty plot.
 - Chart data is derived from `HistoryEntry` only, so no per-phase/intensity analysis is
@@ -476,7 +484,7 @@ e2e/
 ├─ home.spec.ts             render, preview, start
 ├─ editor.spec.ts           defaults, create, edit, delete
 ├─ timer.spec.ts            pause/resume, finish screen, finish -> history
-├─ history.spec.ts          delete entry, clear all, charts + range toggle
+├─ history.spec.ts          delete entry, clear all, charts + range dropdown
 └─ settings.spec.ts         toggle persistence, backup reminder, export
 ```
 
