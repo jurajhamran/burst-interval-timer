@@ -6,7 +6,7 @@ import {
   WorkoutSchema,
   type Workout,
 } from "@/features/workouts/types/types";
-import { WORKOUT_LIMITS } from "./config";
+// import { WORKOUT_LIMITS } from "./config";
 import { getCopyName } from "./copyName";
 
 export function normalizeWorkout(raw: unknown): Workout | null {
@@ -15,16 +15,16 @@ export function normalizeWorkout(raw: unknown): Workout | null {
   return result.data;
 }
 
-function clampInt(value: unknown, min: number, max: number): unknown {
-  if (typeof value !== "number" || !Number.isFinite(value)) return value;
-  return Math.min(max, Math.max(min, Math.round(value)));
-}
+// function clampInt(value: unknown, min: number, max: number): unknown {
+//   if (typeof value !== "number" || !Number.isFinite(value)) return value;
+//   return Math.min(max, Math.max(min, Math.round(value)));
+// }
 
-function fitLabel(value: unknown, max: number, fallback: string): unknown {
-  if (typeof value !== "string") return value;
-  const trimmed = value.trim();
-  return (trimmed || fallback).slice(0, max);
-}
+// function fitLabel(value: unknown, max: number, fallback: string): unknown {
+//   if (typeof value !== "string") return value;
+//   const trimmed = value.trim();
+//   return (trimmed || fallback).slice(0, max);
+// }
 
 /**
  * Clamps data written before the limits were enforced instead of dropping it.
