@@ -34,6 +34,7 @@ import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { WorkoutSchema } from "@/features/workouts/types/types";
+import { WORKOUT_LIMITS } from "@/features/workouts/config";
 
 export function EditorScreen({
   workout,
@@ -111,6 +112,14 @@ export function EditorScreen({
     prevItemsLengthRef.current = items.length;
   }, [items]);
 
+  const itemLabelErrors = items.map((_, index) => {
+    if (!Array.isArray(errors.items)) return undefined;
+    const itemError = errors.items[index] as
+      | { label?: { message?: string } }
+      | undefined;
+    return itemError?.label?.message;
+  });
+
   const totalSeconds = getTotalSeconds(draft as Workout);
 
   const blocker = useBlocker({
@@ -135,7 +144,7 @@ export function EditorScreen({
       (data) => {
         const parsed = WorkoutSchema.parse(data);
         skipGuardRef.current = true;
-        onSave({ ...parsed, name: parsed.name.trim() });
+        onSave(parsed);
       },
       () => {
         setShowErrors(true);
@@ -150,6 +159,9 @@ export function EditorScreen({
             block: "center",
             behavior: "smooth",
           });
+          itemsSectionRef.current
+            ?.querySelector<HTMLInputElement>('[aria-invalid="true"]')
+            ?.focus();
         }
       },
     )();
@@ -240,7 +252,7 @@ export function EditorScreen({
             type="text"
             placeholder="Workout name"
             aria-label="Workout name"
-            maxLength={60}
+            maxLength={WORKOUT_LIMITS.name.max}
             aria-invalid={showErrors && !!errors.name}
             aria-describedby={showErrors && errors.name ? "name-error" : undefined}
             className={`w-full bg-transparent text-lg font-semibold border rounded-xl px-3 py-2 ${
@@ -286,8 +298,8 @@ export function EditorScreen({
                       label="Rounds"
                       value={field.value as number}
                       onChange={field.onChange}
-                      min={1}
-                      max={99}
+                      min={WORKOUT_LIMITS.rounds.min}
+                      max={WORKOUT_LIMITS.rounds.max}
                       step={1}
                       format={String}
                       parse={(s) => (/^\d{1,2}$/.test(s.trim()) ? Number(s) : null)}
@@ -331,10 +343,10 @@ export function EditorScreen({
                           label="Prepare time"
                           value={field.value as number}
                           onChange={field.onChange}
-                          min={1}
-                          max={60}
-                          step={5}
-                          controlMin={5}
+                          min={WORKOUT_LIMITS.prepareDuration.min}
+                          max={WORKOUT_LIMITS.prepareDuration.max}
+                          step={WORKOUT_LIMITS.prepareDuration.step}
+                          controlMin={WORKOUT_LIMITS.prepareDuration.stepperMin}
                         />
                       )}
                     />
@@ -377,9 +389,9 @@ export function EditorScreen({
                           label="Round rest time"
                           value={field.value as number}
                           onChange={field.onChange}
-                          min={1}
-                          max={300}
-                          step={5}
+                          min={WORKOUT_LIMITS.roundRestDuration.min}
+                          max={WORKOUT_LIMITS.roundRestDuration.max}
+                          step={WORKOUT_LIMITS.roundRestDuration.step}
                         />
                       )}
                     />
@@ -438,6 +450,7 @@ export function EditorScreen({
           ) : (
             <SortableItemList
               items={items}
+              labelErrors={itemLabelErrors}
               onReorder={(newItems) => replace(newItems)}
               onChangeItem={(id, patch) => {
                 const idx = items.findIndex((i) => i.id === id);

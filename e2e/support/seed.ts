@@ -10,7 +10,7 @@ export async function seedWorkouts(
   await page.addInitScript((list) => {
     localStorage.setItem(
       "tabata-workouts",
-      JSON.stringify({ state: { workouts: list }, version: 3 }),
+      JSON.stringify({ state: { workouts: list }, version: 5 }),
     );
   }, workouts);
 }

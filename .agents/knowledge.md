@@ -113,8 +113,9 @@ suite. A green `npm run test:run` alone is not enough.
    │                          ConfirmDialog, Button, dialog, alert-dialog, switch, slider,
    │                          input, label, badge, separator, toast)
    ├─ features/               feature modules, each owns its state + UI
-   │  ├─ workouts/            store, types, copyName, WorkoutCard, WorkoutPreviewModal
-   │  ├─ editor/              validate, EditorScreen, SortableItemList/Row
+   │  ├─ workouts/            store, config, types, copyName, WorkoutCard,
+   │  │                       WorkoutPreviewModal
+   │  ├─ editor/              EditorScreen, SortableItemList/Row
    │  ├─ timer/               engine, store, cues, confetti, finishMessages, phaseIcons,
    │  │                       components/, hooks/
    │  ├─ history/             store, stats, charts, types, components/HistoryCharts
@@ -169,7 +170,7 @@ Workouts, History, Settings; the rendered order is History, Workouts, Settings.
 ```ts
 Workout {
   id: string                     // crypto.randomUUID()
-  name: string                   // trimmed, non-empty
+  name: string                   // trimmed, 1..50 chars
   rounds: number                 // 1..99
   items: SessionItem[]           // min 1
   prepare: { enabled, duration }          // default { true, 5 }
@@ -180,8 +181,8 @@ Workout {
 SessionItem {
   id: string
   type: "work" | "rest"
-  label: string
-  duration: number               // seconds, int 1..3600
+  label: string                  // work: trimmed 1..60; rest: always "Rest"
+  duration: number               // seconds, int 5..3600
 }
 
 HistoryEntry {
@@ -198,6 +199,15 @@ Zod schemas in `features/*/types/schemas.ts` are the single source of truth; Typ
 types are `z.infer` of them. Each store exposes a `normalizeX(raw)` helper that
 `safeParse`s untrusted input (used by persistence migration and backup import).
 
+**Limits live in `features/workouts/config.ts`** (`WORKOUT_LIMITS`): workout name 1–50,
+exercise name 1–60, rounds 1–99, item duration 5–3600, prepare 1–60, round rest 1–300.
+The schemas and the editor inputs both read that object, so the editor can never produce a
+workout the import path would reject. Imported workouts outside the limits are skipped
+(counted in `parseBackup().skipped`); copy/import suffixes are truncated to fit the name
+limit. Rest is a fixed phase: `SessionItemSchema` rewrites rest labels to `"Rest"`,
+`buildPhases` enforces it again at display time, and the editor renders a static "Rest"
+instead of an input.
+
 ### 5.3 Persistence
 
 All stores use Zustand `persist` with `localStorage`. Storage keys keep the legacy
@@ -205,15 +215,18 @@ All stores use Zustand `persist` with `localStorage`. Storage keys keep the lega
 
 | Key | Store | Version | Contents |
 | --- | --- | --- | --- |
-| `tabata-workouts` | `useWorkoutsStore` | 3 | `{ state: { workouts }, version: 3 }` |
+| `tabata-workouts` | `useWorkoutsStore` | 5 | `{ state: { workouts }, version: 5 }` |
 | `tabata-history` | `useHistoryStore` | 1 | `{ state: { entries }, version: 1 }` |
 | `tabata-settings` | `useSettingsStore` | 1 | sound, volume, vibration, confetti, lastBackupAt |
 | `tabata-theme` | `useThemeStore` | 0 (implicit) | `{ state: { theme } }` |
 
 - The timer store is **not** persisted. Refreshing mid-workout loses the session. This is
   intentional; "resume interrupted session" was explicitly declined.
-- `tabata-workouts` has a `migrate` function that re-validates every workout through
-  `normalizeWorkout` and drops invalid ones. Zustand only calls `migrate` when the stored
+- `tabata-workouts` has a `migrate` function that clamps legacy out-of-range values
+  (name/label length, durations, fixed rest labels) and then re-validates every workout
+  through `normalizeWorkout`, dropping anything still invalid. When migrating from a version
+  older than 5 it also merges any missing starter workouts into a non-empty library (an
+  intentionally emptied library stays empty). Zustand only calls `migrate` when the stored
   version differs, so a corrupt payload at the current version is not re-normalized.
 - `tabata-theme` is read by an inline script in `index.html` **before React mounts** to
   avoid a light/dark flash. If you rename the key or change its shape, update that script
@@ -414,7 +427,7 @@ duplicating layout logic in components.
 
 - One Zustand store per feature, colocated with the feature. Select the narrowest slice:
   `useStore((s) => s.field)`.
-- Pure logic (engine, stats, charts, backup, validate, copyName) lives outside components so
+- Pure logic (engine, stats, charts, backup, copyName) lives outside components so
   it can be unit-tested in the node environment.
 - Time-dependent pure functions take an injected `now` for deterministic tests.
 
@@ -487,11 +500,11 @@ duplicating layout logic in components.
 
 ```
 e2e/
-├─ fixtures/workouts.ts     deterministic workouts (fastWorkout for 1-second runs)
+├─ fixtures/workouts.ts     deterministic workouts (fastWorkout for short runs)
 ├─ fixtures/history.ts      historyEntries (2 recent) + historySpread (4 across days)
 ├─ support/seed.ts          seedWorkouts / seedHistory via addInitScript
 ├─ home.spec.ts             render, preview, start
-├─ editor.spec.ts           defaults, create, edit, delete
+├─ editor.spec.ts           defaults, fixed rest rows, name limits, create, edit, delete
 ├─ timer.spec.ts            pause/resume, stop confirmation, finish screen, finish -> history
 ├─ history.spec.ts          delete entry, clear all, charts + range dropdown
 └─ settings.spec.ts         toggle persistence, backup reminder, export

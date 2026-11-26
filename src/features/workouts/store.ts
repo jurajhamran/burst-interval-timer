@@ -6,7 +6,7 @@ import {
   WorkoutSchema,
   type Workout,
 } from "@/features/workouts/types/types";
-// import { WORKOUT_LIMITS } from "./config";
+import { WORKOUT_LIMITS } from "./config";
 import { getCopyName } from "./copyName";
 
 export function normalizeWorkout(raw: unknown): Workout | null {
@@ -15,89 +15,89 @@ export function normalizeWorkout(raw: unknown): Workout | null {
   return result.data;
 }
 
-// function clampInt(value: unknown, min: number, max: number): unknown {
-//   if (typeof value !== "number" || !Number.isFinite(value)) return value;
-//   return Math.min(max, Math.max(min, Math.round(value)));
-// }
+function clampInt(value: unknown, min: number, max: number): unknown {
+  if (typeof value !== "number" || !Number.isFinite(value)) return value;
+  return Math.min(max, Math.max(min, Math.round(value)));
+}
 
-// function fitLabel(value: unknown, max: number, fallback: string): unknown {
-//   if (typeof value !== "string") return value;
-//   const trimmed = value.trim();
-//   return (trimmed || fallback).slice(0, max);
-// }
+function fitLabel(value: unknown, max: number, fallback: string): unknown {
+  if (typeof value !== "string") return value;
+  const trimmed = value.trim();
+  return (trimmed || fallback).slice(0, max);
+}
 
 /**
  * Clamps data written before the limits were enforced instead of dropping it.
  * Imports and fresh writes go through `normalizeWorkout`, which rejects
  * out-of-range values.
  */
-// function sanitizeLegacyWorkout(raw: unknown): unknown {
-//   if (typeof raw !== "object" || raw === null) return raw;
-//   const workout = raw as Record<string, unknown>;
+function sanitizeLegacyWorkout(raw: unknown): unknown {
+  if (typeof raw !== "object" || raw === null) return raw;
+  const workout = raw as Record<string, unknown>;
 
-//   const items = Array.isArray(workout.items)
-//     ? workout.items.map((item) => {
-//         if (typeof item !== "object" || item === null) return item;
-//         const entry = item as Record<string, unknown>;
-//         return {
-//           ...entry,
-//           label:
-//             entry.type === "rest"
-//               ? "Rest"
-//               : fitLabel(
-//                   entry.label,
-//                   WORKOUT_LIMITS.exerciseName.max,
-//                   "Work",
-//                 ),
-//           duration: clampInt(
-//             entry.duration,
-//             WORKOUT_LIMITS.itemDuration.min,
-//             WORKOUT_LIMITS.itemDuration.max,
-//           ),
-//         };
-//       })
-//     : workout.items;
+  const items = Array.isArray(workout.items)
+    ? workout.items.map((item) => {
+        if (typeof item !== "object" || item === null) return item;
+        const entry = item as Record<string, unknown>;
+        return {
+          ...entry,
+          label:
+            entry.type === "rest"
+              ? "Rest"
+              : fitLabel(
+                  entry.label,
+                  WORKOUT_LIMITS.exerciseName.max,
+                  "Work",
+                ),
+          duration: clampInt(
+            entry.duration,
+            WORKOUT_LIMITS.itemDuration.min,
+            WORKOUT_LIMITS.itemDuration.max,
+          ),
+        };
+      })
+    : workout.items;
 
-//   const prepare =
-//     typeof workout.prepare === "object" && workout.prepare !== null
-//       ? {
-//           ...(workout.prepare as Record<string, unknown>),
-//           duration: clampInt(
-//             (workout.prepare as Record<string, unknown>).duration,
-//             WORKOUT_LIMITS.prepareDuration.min,
-//             WORKOUT_LIMITS.prepareDuration.max,
-//           ),
-//         }
-//       : workout.prepare;
+  const prepare =
+    typeof workout.prepare === "object" && workout.prepare !== null
+      ? {
+          ...(workout.prepare as Record<string, unknown>),
+          duration: clampInt(
+            (workout.prepare as Record<string, unknown>).duration,
+            WORKOUT_LIMITS.prepareDuration.min,
+            WORKOUT_LIMITS.prepareDuration.max,
+          ),
+        }
+      : workout.prepare;
 
-//   const roundRest =
-//     typeof workout.roundRest === "object" && workout.roundRest !== null
-//       ? {
-//           ...(workout.roundRest as Record<string, unknown>),
-//           duration: clampInt(
-//             (workout.roundRest as Record<string, unknown>).duration,
-//             WORKOUT_LIMITS.roundRestDuration.min,
-//             WORKOUT_LIMITS.roundRestDuration.max,
-//           ),
-//         }
-//       : workout.roundRest;
+  const roundRest =
+    typeof workout.roundRest === "object" && workout.roundRest !== null
+      ? {
+          ...(workout.roundRest as Record<string, unknown>),
+          duration: clampInt(
+            (workout.roundRest as Record<string, unknown>).duration,
+            WORKOUT_LIMITS.roundRestDuration.min,
+            WORKOUT_LIMITS.roundRestDuration.max,
+          ),
+        }
+      : workout.roundRest;
 
-//   return {
-//     ...workout,
-//     name:
-//       typeof workout.name === "string"
-//         ? workout.name.trim().slice(0, WORKOUT_LIMITS.name.max)
-//         : workout.name,
-//     rounds: clampInt(
-//       workout.rounds,
-//       WORKOUT_LIMITS.rounds.min,
-//       WORKOUT_LIMITS.rounds.max,
-//     ),
-//     items,
-//     prepare,
-//     roundRest,
-//   };
-// }
+  return {
+    ...workout,
+    name:
+      typeof workout.name === "string"
+        ? workout.name.trim().slice(0, WORKOUT_LIMITS.name.max)
+        : workout.name,
+    rounds: clampInt(
+      workout.rounds,
+      WORKOUT_LIMITS.rounds.min,
+      WORKOUT_LIMITS.rounds.max,
+    ),
+    items,
+    prepare,
+    roundRest,
+  };
+}
 
 interface WorkoutsState {
   workouts: Workout[];
@@ -276,6 +276,15 @@ const seededWorkouts: Workout[] = [
   },
 ];
 
+function cloneWorkout(workout: Workout): Workout {
+  return {
+    ...workout,
+    items: workout.items.map((item) => ({ ...item })),
+    prepare: { ...workout.prepare },
+    roundRest: { ...workout.roundRest },
+  };
+}
+
 interface PersistedState {
   workouts: Workout[];
 }
@@ -323,15 +332,27 @@ export const useWorkoutsStore = create<WorkoutsState>()(
     }),
     {
       name: "tabata-workouts",
-      version: 3,
-      migrate: (persistedState: unknown) => {
+      version: 5,
+      migrate: (persistedState: unknown, version: number) => {
         const state = persistedState as PersistedState;
-        if (state && Array.isArray(state.workouts)) {
-          const normalized = state.workouts
-            .map((w) => normalizeWorkout(w))
-            .filter((w): w is Workout => w !== null);
-          state.workouts = normalized;
+        if (!state || !Array.isArray(state.workouts)) {
+          return state as WorkoutsState;
         }
+
+        const normalized = state.workouts
+          .map((w) => normalizeWorkout(sanitizeLegacyWorkout(w)))
+          .filter((w): w is Workout => w !== null);
+
+        // Starter workouts introduced after this library was created are merged
+        // once. An intentionally emptied library stays empty.
+        if (version < 5 && normalized.length > 0) {
+          const ids = new Set(normalized.map((w) => w.id));
+          for (const seed of seededWorkouts) {
+            if (!ids.has(seed.id)) normalized.push(cloneWorkout(seed));
+          }
+        }
+
+        state.workouts = normalized;
         return state as WorkoutsState;
       },
     },

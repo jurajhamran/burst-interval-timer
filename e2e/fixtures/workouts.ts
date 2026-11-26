@@ -9,7 +9,7 @@ export const fastWorkout: Workout = {
       id: "fast-work",
       type: "work",
       label: "Sprint",
-      duration: 1,
+      duration: 5,
     },
   ],
   prepare: { enabled: false, duration: 5 },

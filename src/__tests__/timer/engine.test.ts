@@ -59,4 +59,17 @@ describe("buildPhases", () => {
     const sum = phases.reduce((s, p) => s + p.duration, 0);
     expect(getTotalSeconds(workout)).toBe(sum);
   });
+
+  it("rest phases always use the fixed Rest label", () => {
+    const workout = makeWorkout({
+      items: [
+        { id: "a", type: "work", label: "Sprint", duration: 20 },
+        { id: "b", type: "rest", label: "Stretch", duration: 10 },
+      ],
+    });
+    const phases = buildPhases(workout);
+    const rest = phases.filter((p) => p.type === "rest");
+    expect(rest).toHaveLength(2);
+    expect(rest.every((p) => p.label === "Rest")).toBe(true);
+  });
 });

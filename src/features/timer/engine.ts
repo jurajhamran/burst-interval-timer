@@ -29,7 +29,8 @@ export function buildPhases(workout: Workout): Phase[] {
     for (const item of items) {
       phases.push({
         type: item.type,
-        label: item.label,
+        // Rest is a fixed phase; never surface a stored/custom label for it.
+        label: item.type === "rest" ? "Rest" : item.label,
         duration: item.duration,
         round: r,
       });

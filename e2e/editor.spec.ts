@@ -15,6 +15,48 @@ test.describe("workout editor", () => {
     await expect(durations.nth(1)).toHaveValue("0:15");
   });
 
+  test("rest rows have a fixed name", async ({ page }) => {
+    await page.goto("/#/workout/new");
+
+    await expect(
+      page.getByRole("textbox", { name: "Exercise name" }),
+    ).toHaveCount(1);
+
+    const restRow = page.locator("[data-item-id]").nth(1);
+    await expect(
+      restRow.getByText("Rest", { exact: true }).first(),
+    ).toBeVisible();
+    await expect(
+      restRow.getByRole("textbox", { name: "Exercise name" }),
+    ).toHaveCount(0);
+  });
+
+  test("requires an exercise name", async ({ page }) => {
+    await page.goto("/#/workout/new");
+
+    await page.getByLabel("Workout name").fill("Valid name");
+    await page.getByLabel("Exercise name").fill("");
+    await page.getByRole("button", { name: "Save" }).click();
+
+    await expect(page.getByText("Give this exercise a name")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "New workout" }),
+    ).toBeVisible();
+  });
+
+  test("caps workout and exercise names at their limits", async ({ page }) => {
+    await page.goto("/#/workout/new");
+
+    const workoutName = page.getByLabel("Workout name");
+    await workoutName.pressSequentially("w".repeat(55));
+    await expect(workoutName).toHaveValue("w".repeat(50));
+
+    const exercise = page.getByLabel("Exercise name");
+    await exercise.fill("");
+    await exercise.pressSequentially("e".repeat(65));
+    await expect(exercise).toHaveValue("e".repeat(60));
+  });
+
   test("creates a workout from the editor", async ({ page }) => {
     await page.goto("/#/workout/new");
 
@@ -55,6 +97,8 @@ test.describe("workout editor", () => {
     await page.getByRole("button", { name: "Delete", exact: true }).click();
 
     await expect(page.getByText("Workout deleted")).toBeVisible();
-    await expect(page.getByText("No workouts yet")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Core Burner" }),
+    ).toHaveCount(0);
   });
 });

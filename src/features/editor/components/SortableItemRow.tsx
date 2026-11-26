@@ -2,15 +2,18 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Trash2 } from "lucide-react";
 import type { SessionItem, ItemType } from "@/features/workouts/types/types";
+import { WORKOUT_LIMITS } from "@/features/workouts/config";
 import { DurationInput } from "@/components/ui/DurationInput";
 import { PHASE_ICONS } from "@/features/timer/phaseIcons";
 
 export function SortableItemRow({
   item,
+  error,
   onChange,
   onDelete,
 }: {
   item: SessionItem;
+  error?: string;
   onChange: (patch: Partial<SessionItem>) => void;
   onDelete: () => void;
 }) {
@@ -35,6 +38,7 @@ export function SortableItemRow({
   return (
     <div
       ref={setNodeRef}
+      data-item-id={item.id}
       style={style}
       className={`rounded-2xl border border-line border-l-4 bg-surface-2 p-3 space-y-3 ${
         isWork ? "border-l-work" : "border-l-rest"
@@ -51,7 +55,7 @@ export function SortableItemRow({
           <GripVertical className="size-5" />
         </button>
 
-        {item.type === "work" && (
+        {item.type === "work" ? (
           <input
             readOnly={isDragging}
             id={`item-label-${item.id}`}
@@ -59,12 +63,18 @@ export function SortableItemRow({
             type="text"
             value={item.label}
             onChange={(e) => onChange({ label: e.target.value })}
-            placeholder="Label"
-            className="flex-1 min-w-0 bg-transparent font-medium"
+            placeholder="Exercise name"
+            aria-label="Exercise name"
+            aria-invalid={!!error}
+            aria-describedby={
+              error ? `item-label-${item.id}-error` : undefined
+            }
+            maxLength={WORKOUT_LIMITS.exerciseName.max}
+            className={`flex-1 min-w-0 bg-transparent font-medium ${
+              error ? "border-b border-work" : ""
+            }`}
           />
-        )}
-
-        {item.type == "rest" && (
+        ) : (
           <span className="flex-1 min-w-0 font-medium">Rest</span>
         )}
 
@@ -77,6 +87,16 @@ export function SortableItemRow({
           <Trash2 className="size-5" />
         </button>
       </div>
+
+      {error && (
+        <p
+          id={`item-label-${item.id}-error`}
+          role="alert"
+          className="text-xs text-work"
+        >
+          {error}
+        </p>
+      )}
 
       <div className="flex items-center justify-between gap-3">
         <div className="inline-flex rounded-full bg-surface-3 p-1">
@@ -109,9 +129,9 @@ export function SortableItemRow({
           label="Duration"
           value={item.duration}
           onChange={(duration) => onChange({ duration })}
-          min={5}
-          max={3600}
-          step={5}
+          min={WORKOUT_LIMITS.itemDuration.min}
+          max={WORKOUT_LIMITS.itemDuration.max}
+          step={WORKOUT_LIMITS.itemDuration.step}
         />
       </div>
     </div>

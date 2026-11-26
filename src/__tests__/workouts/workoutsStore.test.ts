@@ -2,6 +2,14 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { useWorkoutsStore, normalizeWorkout } from "@/features/workouts/store";
 import type { Workout } from "@/features/workouts/types/types";
 
+function getMigrate() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const opts = (useWorkoutsStore as any).persist?.getOptions?.();
+  return opts?.migrate as
+    | ((state: unknown, version: number) => { workouts: Workout[] })
+    | undefined;
+}
+
 describe("normalizeWorkout", () => {
   const validWorkout: Workout = {
     id: "w1",
@@ -174,22 +182,103 @@ describe("useWorkoutsStore", () => {
   });
 
   it("persisted store migration normalizes workouts", () => {
-    // Access persist options if possible or test migration logic indirectly / via store setup
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const persistOptions = (useWorkoutsStore as any).persist;
-    if (persistOptions && persistOptions.getOptions) {
-      const opts = persistOptions.getOptions();
-      if (opts && opts.migrate) {
-        const badState = {
-          workouts: [
-            { id: "valid", name: "Valid", rounds: 4, items: [{ id: "i", type: "work", label: "W", duration: 20 }] },
-            { id: "", name: "Invalid" },
-          ],
-        };
-        const migrated = opts.migrate(badState, 2);
-        expect(migrated.workouts).toHaveLength(1);
-        expect(migrated.workouts[0].id).toBe("valid");
-      }
-    }
+    const migrate = getMigrate();
+    if (!migrate) return;
+
+    const badState = {
+      workouts: [
+        { id: "valid", name: "Valid", rounds: 4, items: [{ id: "i", type: "work", label: "W", duration: 20 }] },
+        { id: "", name: "Invalid" },
+      ],
+    };
+    const migrated = migrate(badState, 2);
+    expect(migrated.workouts.some((w) => w.id === "valid")).toBe(true);
+    expect(migrated.workouts.some((w) => w.id === "")).toBe(false);
+  });
+
+  it("merges starter workouts added after the stored version", () => {
+    const migrate = getMigrate();
+    if (!migrate) return;
+
+    const migrated = migrate(
+      {
+        workouts: [
+          {
+            id: "seed-core",
+            name: "Core Burner",
+            rounds: 4,
+            items: [{ id: "a", type: "work", label: "Plank", duration: 40 }],
+          },
+        ],
+      },
+      4,
+    );
+
+    const ids = migrated.workouts.map((w) => w.id);
+    expect(ids).toContain("seed-core");
+    expect(ids).toContain("seed-hiit");
+    expect(ids).toContain("seed-stretch");
+    expect(ids.filter((id) => id === "seed-core")).toHaveLength(1);
+  });
+
+  it("does not re-seed after the merge version", () => {
+    const migrate = getMigrate();
+    if (!migrate) return;
+
+    const migrated = migrate(
+      {
+        workouts: [
+          {
+            id: "seed-core",
+            name: "Core Burner",
+            rounds: 4,
+            items: [{ id: "a", type: "work", label: "Plank", duration: 40 }],
+          },
+        ],
+      },
+      5,
+    );
+
+    expect(migrated.workouts.map((w) => w.id)).toEqual(["seed-core"]);
+  });
+
+  it("keeps an intentionally empty library empty", () => {
+    const migrate = getMigrate();
+    if (!migrate) return;
+
+    const migrated = migrate({ workouts: [] }, 4);
+    expect(migrated.workouts).toEqual([]);
+  });
+
+  it("migration clamps values written before the limits existed", () => {
+    const migrate = getMigrate();
+    if (!migrate) return;
+
+    const migrated = migrate(
+      {
+        workouts: [
+          {
+            id: "legacy",
+            name: "N".repeat(60),
+            rounds: 4,
+            items: [
+              { id: "a", type: "work", label: "L".repeat(70), duration: 1 },
+              { id: "b", type: "rest", label: "Stretch", duration: 10 },
+            ],
+            prepare: { enabled: true, duration: 120 },
+            roundRest: { enabled: true, duration: 600 },
+          },
+        ],
+      },
+      3,
+    );
+
+    const workout = migrated.workouts[0];
+    expect(workout.name).toHaveLength(50);
+    expect(workout.items[0].label).toHaveLength(60);
+    expect(workout.items[0].duration).toBe(5);
+    expect(workout.items[1].label).toBe("Rest");
+    expect(workout.prepare.duration).toBe(60);
+    expect(workout.roundRest.duration).toBe(300);
   });
 });

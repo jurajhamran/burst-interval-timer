@@ -19,11 +19,13 @@ import { SortableItemRow } from "./SortableItemRow";
 
 export function SortableItemList({
   items,
+  labelErrors,
   onReorder,
   onChangeItem,
   onDeleteItem,
 }: {
   items: SessionItem[];
+  labelErrors?: (string | undefined)[];
   onReorder: (items: SessionItem[]) => void;
   onChangeItem: (id: string, patch: Partial<SessionItem>) => void;
   onDeleteItem: (id: string) => void;
@@ -59,10 +61,11 @@ export function SortableItemList({
     >
       <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-3">
-          {items.map((item) => (
+          {items.map((item, index) => (
             <SortableItemRow
               key={item.id}
               item={item}
+              error={labelErrors?.[index]}
               onChange={(patch) => onChangeItem(item.id, patch)}
               onDelete={() => onDeleteItem(item.id)}
             />

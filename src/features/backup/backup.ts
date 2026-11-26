@@ -1,6 +1,7 @@
 import type { Workout } from "@/features/workouts/types/types";
 import type { HistoryEntry } from "@/features/history/types/types";
 import { normalizeWorkout } from "@/features/workouts/store";
+import { appendNameSuffix } from "@/features/workouts/copyName";
 import { normalizeEntry } from "@/features/history/store";
 
 export const BACKUP_VERSION = 1;
@@ -104,7 +105,7 @@ export function planImport(
       workoutsToAdd.push({
         ...inc,
         id: crypto.randomUUID(),
-        name: `${inc.name} (imported)`,
+        name: appendNameSuffix(inc.name, " (imported)"),
       });
       renamedCopies += 1;
     }

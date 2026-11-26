@@ -135,6 +135,35 @@ describe("backup", () => {
     expect(plan.entriesToAdd[0].id).toBe("h2");
   });
 
+  it("skips imported workouts that break the limits", () => {
+    const parsed = parseBackup(
+      JSON.stringify({
+        app: "tabata-timer",
+        version: 1,
+        workouts: [
+          { ...makeWorkout(), name: "x".repeat(51) },
+          { ...makeWorkout(), id: "w2" },
+        ],
+        history: [],
+      }),
+    );
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.workouts).toHaveLength(1);
+      expect(parsed.skipped).toBe(1);
+    }
+  });
+
+  it("keeps renamed import copies within the name limit", () => {
+    const long = makeWorkout({ id: "w1", name: "x".repeat(50) });
+    const plan = planImport(
+      { workouts: [makeWorkout({ id: "w1", name: "Different" })], history: [] },
+      { workouts: [long], history: [] },
+    );
+    expect(plan.workoutsToAdd[0].name.length).toBeLessThanOrEqual(50);
+    expect(plan.workoutsToAdd[0].name.endsWith(" (imported)")).toBe(true);
+  });
+
   it("backupFileName format", () => {
     const name = backupFileName(new Date(2026, 0, 5));
     expect(name).toBe("tabata-backup-2026-01-05.json");
